@@ -1,0 +1,149 @@
+\documentclass[letter]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{enumitem}
+%\usepackage{fullpage}
+\usepackage[margin=1.0in]{geometry}
+%\usepackage{fancyhdr}
+\setlength{\headheight}{5pt}
+%\setlength{\textheight}{650pt}
+%\pagestyle{fancy}
+\linespread{1.0}
+\setlength{\parindent}{0pt}
+\usepackage{amsmath,amsfonts,amssymb,amsthm,bbm,graphicx,enumerate,times} 
+\usepackage{hyperref}
+\usepackage{mathtools}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{dsfont}
+
+\renewcommand{\i}{\,\ensuremath\mathrm{i\,}}
+\newcommand{\id}{\mathds{1}}
+\newcommand{\tr}{\mathrm{tr}}
+\newcommand{\intd}[1]{\int\mathrm{d}#1\,}
+
+\begin{document}
+
+\section*{Covariance matrices and scalar fields}
+\subsection*{Real case}
+
+In the study of entanglement of purification (EoP), we considered mixed states with density matrices of the form
+\begin{equation}
+\label{EQ_RHO1}
+\rho(\phi, \phi^\prime) \propto \exp\left[ 
+-\frac{1}{2}\;
+\begin{pmatrix}
+\phi &
+\phi^\prime
+\end{pmatrix}
+\begin{pmatrix}
+P - \frac{1}{2}Q R^{-1} Q^\mathrm{T} & - \frac{1}{2}Q R^{-1} Q^\mathrm{T}\\
+- \frac{1}{2}Q R^{-1} Q^\mathrm{T} & P - \frac{1}{2}Q R^{-1} Q^\mathrm{T}
+\end{pmatrix}
+\begin{pmatrix}
+\phi \\
+\phi^\prime
+\end{pmatrix}
+ \right]\ .
+\end{equation}
+The bosonic field $\phi$ is discretized on a lattice of $n$ sites in the form $\phi(x^k) \equiv \phi^k$, with conjugate momentum $\pi^k$ obeying $[\phi^j,\pi^k] = \i\delta^{j k}$. The real $n\times n$ matrices $P,Q,R$ depend on the scalar field ansatz and the position of the sites that are traced out.
+In general, we can write density matrices of the form \eqref{EQ_RHO1} as
+\begin{equation}
+\label{EQ_RHO2}
+\rho(\phi, \phi^\prime) = \sqrt{\det\frac{A+B}{\pi}} e^{-\frac{1}{2} (\phi^\mathrm{T} A \phi + {\phi^\prime}^\mathrm{T} A \phi^\prime + \phi^\mathrm{T} B \phi^\prime  + {\phi^\prime}^\mathrm{T} B \phi) }\ ,
+\end{equation}
+with real symmetric matrices $A,B$. To check that this density matrix is properly normalized, we compute
+\begin{align}
+Z = \tr{\rho} &=  \sqrt{\det\frac{A+B}{\pi}} \intd\phi \intd\phi^\prime  \delta^{(n)}(\phi - \phi^\prime)\, e^{ -\frac{1}{2} (\phi^\mathrm{T} A \phi + {\phi^\prime}^\mathrm{T} A \phi^\prime + \phi^\mathrm{T} B \phi^\prime + {\phi^\prime}^\mathrm{T} B \phi ) } \nonumber\\
+&= \sqrt{\det\frac{A+B}{\pi}} \intd\phi e^{ -\phi^\mathrm{T} (A+B) \phi} 
+= 1\ .
+\end{align}
+Here we used the notation $\intd\phi = \prod_k \intd{\phi_k}$ and $\delta^{(n)}(\phi - \phi^\prime) = \prod_k \delta(\phi_k - \phi_k^\prime)$. We are now interested in computing the \emph{covariance matrix}
+\begin{equation}
+G^{a b} = \langle \{ \xi^a, \xi^b \} \rangle =
+\begin{pmatrix}
+\langle \{ \phi^\alpha, \phi^\beta \} \rangle & \langle \{ \phi^\alpha, \pi^\beta \} \rangle \\
+\langle \{ \pi^\alpha, \phi^\beta \} \rangle & \langle \{ \pi^\alpha, \pi^\beta \} \rangle
+\end{pmatrix}
+\equiv
+\begin{pmatrix}
+\Gamma^{\alpha\beta}_{\phi\phi} & \Gamma^{\alpha\beta}_{\phi\pi} \\
+\Gamma^{\beta\alpha}_{\phi\pi} & \Gamma^{\alpha\beta}_{\pi\pi}
+\end{pmatrix}\ .
+\end{equation}
+We introduced the quadrature coordinates $\xi^a = (\phi^1, \phi^2,\dots,\phi^n,\pi^1,\pi^2,\dots,\pi^n)$. To find the $\phi\phi$ correlations, we compute
+\begin{align}
+\langle \phi^\alpha \phi^\beta \rangle &= \sqrt{\det\frac{A+B}{\pi}} \intd\phi \intd\phi^\prime  \delta^{(n)}(\phi - \phi^\prime)\, \phi^\alpha \phi^\beta e^{ -\frac{1}{2} (\phi^\mathrm{T} A \phi + {\phi^\prime}^\mathrm{T} A \phi^\prime + \phi^\mathrm{T} B \phi^\prime + {\phi^\prime}^\mathrm{T} B \phi ) } \nonumber\\
+&= \left[ \frac{\partial}{\partial J_\alpha} \frac{\partial}{\partial J_\beta}\, 
+\underbrace{\sqrt{\det\frac{A+B}{\pi}} \intd\phi  e^{ -\phi^\mathrm{T} (A+B) \phi + J^\mathrm{T} \phi }}_{= Z[J]} \right]_{J=0} \nonumber\\
+&= \left[ \frac{\partial}{\partial J_\alpha} \frac{\partial}{\partial J_\beta} e^{\frac{1}{4} J^\mathrm{T} (A+B)^{-1} J} \right]_{J=0}  = \frac{1}{2} ((A+B)^{-1})^{\alpha\beta}\ .
+\end{align}
+Thus, we find that $\Gamma^{\alpha\beta}_{\phi\phi} \equiv \langle \{ \phi^\alpha, \phi^\beta \} \rangle = ((A+B)^{-1})^{\alpha\beta}$. Next, we calculate the $\pi\pi$ correlations, using the field representation $\pi^k \to - \i \partial/\partial\phi_k$:
+\begin{align}
+\langle \pi^\alpha \pi^\beta \rangle &= - \sqrt{\det\frac{A+B}{\pi}} \intd\phi \intd\phi^\prime  \delta^{(n)}(\phi - \phi^\prime)\, \frac{\partial}{\partial\phi_\alpha} \frac{\partial}{\partial\phi_\beta} e^{ -\frac{1}{2} (\phi^\mathrm{T} A \phi + {\phi^\prime}^\mathrm{T} A \phi^\prime + \phi^\mathrm{T} B \phi^\prime  + {\phi^\prime}^\mathrm{T} B \phi )} \nonumber\\
+&= \sqrt{\det\frac{A+B}{\pi}} \intd\phi \intd\phi^\prime  \delta^{(n)}(\phi - \phi^\prime)\, \left( A^{\alpha\beta} - ({A^\alpha}_\gamma\phi^\gamma + {B^\alpha}_\gamma{\phi^\prime}^\gamma) ({A^\beta}_\delta \phi^\delta + {B^\beta}_\delta {\phi^\prime}^\delta) \right) e^{ -\frac{1}{2} \phi^\mathrm{T} A \phi + \dots } \nonumber\\
+&= \sqrt{\det\frac{A+B}{\pi}} \intd\phi \left( A^{\alpha\beta} - ({A^\alpha}_\gamma + {B^\alpha}_\gamma) ({A^\beta}_\delta + {B^\beta}_\delta) \phi^\gamma\phi^\delta  \right) e^{ -\phi^\mathrm{T} (A+B) \phi} \nonumber\\
+&= \sqrt{\det\frac{A+B}{\pi}} \left( \frac{A^{\alpha\beta}}{\sqrt{\det\frac{A+B}{\pi}}} - \frac{1}{2} ({A^\alpha}_\gamma + {B^\alpha}_\gamma) ({A^\beta}_\delta + {B^\beta}_\delta) ((A+B)^{-1})^{\gamma\delta} \right) \nonumber\\
+&= A^{\alpha\beta} - \frac{1}{2} \left( A^{\alpha\beta} + B^{\alpha\beta} \right) = \frac{1}{2} \left( A^{\alpha\beta} - B^{\alpha\beta} \right)\ .
+\end{align}
+Hence $\Gamma^{\alpha\beta}_{\pi\pi} \equiv \langle \{ \pi^\alpha, \pi^\beta \} \rangle = (A-B)^{\alpha\beta}$.
+In reverse, we simply find
+\begin{align}
+A &= \frac{1}{2} \left( \Gamma_{\phi\phi}^{-1} + \Gamma_{\pi\pi} \right)\ , &
+B &= \frac{1}{2} \left( \Gamma_{\phi\phi}^{-1} - \Gamma_{\pi\pi} \right)\ .
+\end{align}
+Alternatively, using the form \eqref{EQ_RHO1}, we can write
+\begin{align}
+P &= \Gamma_{\pi\pi} , &
+Q R^{-1} Q^\mathrm{T} &= \Gamma_{\pi\pi} - \Gamma_{\phi\phi}^{-1} \ . &
+\end{align}
+Note that due to our assumption of real matrices $A,B$, the $\phi\pi$ correlator can only be imaginary, and must therefore vanish.
+
+\subsection*{Complex case}
+We now consider the more complicated case where the exponential term in \eqref{EQ_RHO2} is complex, i.e., we assume density matrices of the form
+\begin{equation}
+\rho(\phi, \phi^\prime) = \sqrt{\det\frac{A+B}{\pi}} e^{-\frac{1}{2} (\phi^\mathrm{T} (A+\i C) \phi + {\phi^\prime}^\mathrm{T} (A-\i C) \phi^\prime + \phi^\mathrm{T} (B+\i D) \phi^\prime + {\phi^\prime}^\mathrm{T} (B-\i D) \phi ) }\ ,
+\end{equation}
+where the $n\times n$ matrices $A,B,C,D$ are real, with $A,B,C$ being symmetric and $D$ being antisymmetric, following from $\rho^\dagger=\rho$ and the commutativity of the modes $\phi_k$. Again, let us confirm the normalization
+\begin{align}
+Z = \tr{\rho} &=  \sqrt{\det\frac{A+B}{\pi}} \intd\phi \intd\phi^\prime  \delta^{(n)}(\phi - \phi^\prime)\, e^{-\frac{1}{2} (\phi^\mathrm{T} (A+\i C) \phi + {\phi^\prime}^\mathrm{T} (A-\i C) \phi^\prime + \phi^\mathrm{T} (B+\i D) \phi^\prime  + {\phi^\prime}^\mathrm{T} (B-\i D) \phi) } \nonumber\\
+&= \sqrt{\det\frac{A+B}{\pi}} \intd\phi e^{ -\phi^\mathrm{T} (A+B) \phi} 
+= 1\ .
+\end{align}
+The $\phi\phi$ correlator is equivalent to the real case:
+\begin{align}
+\langle \phi^\alpha \phi^\beta \rangle &= \sqrt{\det\frac{A+B}{\pi}} \intd\phi \intd\phi^\prime  \delta^{(n)}(\phi - \phi^\prime)\, \phi^\alpha \phi^\beta e^{ -\frac{1}{2} (\phi^\mathrm{T} (A+\i C) \phi + {\phi^\prime}^\mathrm{T} (A-\i C) \phi^\prime + \phi^\mathrm{T} (B+\i D) \phi^\prime + {\phi^\prime}^\mathrm{T} (B-\i D) \phi ) } \nonumber\\
+&= \left[ \frac{\partial}{\partial J_\alpha} \frac{\partial}{\partial J_\beta}\, 
+\underbrace{\sqrt{\det\frac{A+B}{\pi}} \intd\phi  e^{ -\phi^\mathrm{T} (A+B) \phi + J^\mathrm{T} \phi }}_{= Z[J]} \right]_{J=0} \nonumber\\
+&= \left[ \frac{\partial}{\partial J_\alpha} \frac{\partial}{\partial J_\beta} e^{\frac{1}{4} J^\mathrm{T} (A+B)^{-1} J} \right]_{J=0}  = \frac{1}{2} ((A+B)^{-1})^{\alpha,\beta}\ .
+\end{align}
+Again, we find $\Gamma^{\alpha\beta}_{\phi\phi} \equiv\langle \{ \phi^\alpha, \phi^\beta \} \rangle = ((A+B)^{-1})^{\alpha\beta}$. The $\phi\pi$ correlator, on the other hand, is now nonzero:
+\begin{align}
+\langle \phi^\alpha \pi^\beta \rangle &= -\i \sqrt{\det\frac{A+B}{\pi}} \intd\phi \intd\phi^\prime  \delta^{(n)}(\phi - \phi^\prime)\, \phi^\alpha \frac{\partial}{\partial\phi_\beta} e^{ -\frac{1}{2} (\phi^\mathrm{T} (A+\i C) \phi + {\phi^\prime}^\mathrm{T} (A-\i C) \phi^\prime + \phi^\mathrm{T} (B+\i D) \phi^\prime  + {\phi^\prime}^\mathrm{T} (B-\i D) \phi) } \nonumber\\
+&= \sqrt{\det\frac{A+B}{\pi}} \intd\phi \intd\phi^\prime  \delta^{(n)}(\phi - \phi^\prime)\, \phi^\alpha \left( {(\i A-C)^\beta}_\gamma\,\phi^\gamma + {(\i B - D)^\beta}_\gamma {\phi^\prime}^\gamma \right) e^{ -\frac{1}{2} \phi^\mathrm{T} (A+\i C) \phi + \dots } \nonumber\\
+&= \sqrt{\det\frac{A+B}{\pi}} {\left( -C - D + \i A + \i B \right)^\beta}_\gamma\, \intd\phi \phi^\alpha \phi^\gamma e^{ -\frac{1}{2} \phi^\mathrm{T} (A+B) \phi } \nonumber\\
+&= {\left( -C - D + \i A + \i B \right)^\beta}_\gamma\, \frac{1}{2} ((A+B)^{-1})^{\alpha\gamma} \nonumber\\
+&= \frac{\i}{2} \delta^{\alpha\beta} - \frac{1}{2} ((A+B)^{-1}(C-D))^{\alpha\beta}\ .
+\end{align}
+It follows that $\Gamma^{\alpha\beta}_{\phi\pi} \equiv \langle \{ \phi^\alpha, \pi^\beta \} \rangle = 2 \langle \phi^\alpha\pi^\beta \rangle - \i\delta^{\alpha\beta} = -((A+B)^{-1}(C-D))^{\alpha\beta}$. This also implies $\Gamma_{\pi\phi} = \Gamma_{\phi\pi}^\mathrm{T} = -(C+D) (A+B)^{-1}$, as $D^\mathrm{T}=-D$.
+Finally, we compute the $\pi\pi$ correlator:
+\begin{align}
+\langle \pi^\alpha \pi^\beta \rangle &= - \sqrt{\det\frac{A+B}{\pi}} \intd\phi \intd\phi^\prime  \delta^{(n)}(\phi - \phi^\prime)\,\frac{\partial}{\partial\phi_\alpha}\frac{\partial}{\partial\phi_\beta} e^{ -\frac{1}{2} (\phi^\mathrm{T} (A+\i C) \phi + {\phi^\prime}^\mathrm{T} (A-\i C) \phi^\prime + {\phi^\prime}^\mathrm{T} (B+\i D) \phi + \phi^\mathrm{T} (B-\i D) \phi^\prime ) } \nonumber\\
+&= \sqrt{\det\frac{A+B}{\pi}} \intd\phi \left( (A+\i C)^{\alpha\beta} - {(A+B + \i C + \i D)^\alpha}_\gamma\, {(A+B + \i C + \i D)^\beta}_\delta\, \phi^\gamma \phi^\delta \right) e^{ -\frac{1}{2} \phi^\mathrm{T} (A+B) \phi } \nonumber\\
+&= (A+\i C)^{\alpha\beta} - {(A+B + \i C + \i D)^\alpha}_\gamma\, {(A+B+ \i C + \i D)^\beta}_\delta\, \frac{1}{2} ((A+B)^{-1})^{\gamma\delta} \nonumber\\
+&= (A+\i C)^{\alpha\beta} - \frac{1}{2} (A+B)^{\beta\alpha} - \frac{\i}{2}(C+D)^{\beta\alpha} - \frac{\i}{2} (C+D)^{\alpha\beta} + \frac{1}{2} {(C+D)^\alpha}_\gamma {(C+D)^\beta}_\delta ((A+B)^{-1})^{\gamma\delta} \nonumber\\
+&= \frac{1}{2}(A - B)^{\alpha\beta} + \frac{1}{2} \left( (C+D)(A+B)^{-1}(C-D) \right)^{\alpha\beta}\ .
+\end{align}
+We thus find the full correlator $\Gamma^{\alpha\beta}_{\pi\pi} \equiv \langle \{ \pi^\alpha, \pi^\beta \} \rangle = (A - B)^{\alpha\beta} + ( (C+D)(A+B)^{-1}(C-D))^{\alpha\beta}$. To summarize:
+\begin{align}
+\Gamma_{\phi\phi} &= (A+B)^{-1}\ , & \Gamma_{\pi\pi} &= A-B + (C+D) (A+B)^{-1} (C+D)^\mathrm{T}\ , \nonumber\\
+\Gamma_{\phi\pi} &= -(A+B)^{-1} (C+D)^\mathrm{T}\ , & \Gamma_{\pi\phi} &= - (C+D) (A+B)^{-1}\ .
+\end{align}
+Again, we can reconstruct the matrices $A,B,C,D$ from the correlators:
+\begin{align}
+A &= \frac{1}{2} \left( \Gamma_{\phi\phi}^{-1} + \Gamma_{\pi\pi} - \Gamma_{\pi\phi} \Gamma_{\phi\phi}^{-1} \Gamma_{\phi\pi} \right)\ , &
+B &= \frac{1}{2} \left(  \Gamma_{\phi\phi}^{-1} - \Gamma_{\pi\pi} + \Gamma_{\pi\phi} \Gamma_{\phi\phi}^{-1} \Gamma_{\phi\pi}  \right)\ ,\nonumber\\
+C &= -\frac{1}{2} \left( \Gamma_{\pi\phi} \Gamma_{\phi\phi}^{-1} + \Gamma_{\phi\phi}^{-1} \Gamma_{\phi\pi} \right)\ , &
+D &=  -\frac{1}{2} \left( \Gamma_{\pi\phi} \Gamma_{\phi\phi}^{-1} - \Gamma_{\phi\phi}^{-1} \Gamma_{\phi\pi} \right)\ .
+\end{align}
+
+
+\end{document}
