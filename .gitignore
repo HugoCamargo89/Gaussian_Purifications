@@ -1,0 +1,10 @@
+
+*.aux
+
+*.log
+
+*.out
+
+*.gz
+
+Covariance matrix conversion/eop_covmatrix\.pdf
