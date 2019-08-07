@@ -44,7 +44,7 @@ Optimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_, dimB_},
 		(* Main routine, with stopping criterion (tolerance on gradient norm / step number limit) *)
 		While[Norm[grad]>tol && stepcount < steplimit,
 
-			\[Epsilon]=0.5; (* arbitrary initial choice of step size *)
+			\[Epsilon]=Norm[grad]; (* arbitrary initial choice of step size *)
 			Mnew=newM[Mold,\[Epsilon],X]; Enew=function[Mnew,J0];
 			
 			(* Sub-rountine to ensure favourable step *)
