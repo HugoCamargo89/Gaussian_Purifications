@@ -88,8 +88,8 @@ Return[Orthogonalize[m]]
 (* Conditional logarithm *)
 logfunction[x_]:=If[x==0,0,Log[x]]
 ConditionalLog[x_]:=Module[{Diag,Tra,Mat},
-	Diag=DiagonalMatrix[logfunction/@Eigenvalues[D.D]];
-	Tra=Eigenvectors[D.D]//Transpose//Chop;
+	Diag=DiagonalMatrix[logfunction/@Eigenvalues[x]];
+	Tra=Eigenvectors[x]//Transpose//Chop;
 	Mat=Tra.Diag.Inverse[Tra]//Chop];
 
 (* Inverting a symplectic matrix *)
@@ -98,6 +98,9 @@ invMSp[m_]:=Module[{\[CapitalOmega]}, \[CapitalOmega]=\[CapitalOmega]qpqp[Length
 End[]
 
 EndPackage[]
+
+
+
 
 
 
