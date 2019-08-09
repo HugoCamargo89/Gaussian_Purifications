@@ -8,7 +8,9 @@ Begin["Private`"]
 
 ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_, dimB_}, tol_, steplimit_:\[Infinity]]:=
 
-	Module[{dim, Ktype, KA, KB, K, gradK, Mold, Mnew, Eold, Enew, Elist, grad, X, \[Epsilon], stepcount, newM, MnewList},
+	Module[{dim, Ktype, KA, KB, K, Mold, Mnew, Eold, Enew, FinalE, Elist, FinalElist, grad, X, \[Epsilon], stepcount, newM, MnewList, NormList, FinalNormList, dimM0, ordering, StopQ, Nulls, NullsList},
+		
+		dimM0=Length[M0]; FinalElist=List[]; FinalNormList=List[];
 		
 		(* Generate Lie algebra basis *)
 		KA=ToExpression[basisA][dimA]; KB=ToExpression[basisB][dimB];
@@ -36,15 +38,26 @@ ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_,
 			(* Case 3: Both A and B are varied *)
 			True, newM[m_,s_,x_]:=m.approxExp[s,x]];
 		
-		(* Iteration *)
-		Mold=M0; Eold=function[#,J0]&/@Mold; grad=gradfunction[#,J0,K]&/@Mold; X=(-#).K/Norm[#]&/@grad; (* Define function values and gradient for initial values *) 
-		Elist={Eold}; (* Append function value to funtion value list *)
-		stepcount=0; (* Initialise step count *)
+		(* --------Iteration-------- *)
 		
-		(* Main routine, with stopping criterion (tolerance on gradient norm / step number limit) *)
-		While[!NoneTrue[Norm[#]>tol&/@grad,TrueQ] && stepcount < steplimit,
+		(* Define function values and gradient for initial values *) 
+		Mold=M0; Eold=function[#,J0]&/@Mold; grad=gradfunction[#,J0,K]&/@Mold; X=(-#).K/Norm[#]&/@grad; 
+		
+		(* Append function value to funtion value list *)
+		Elist=Partition[Eold,1]; NormList=Partition[Norm[#]&/@grad,1];
+		
+		(* Initialise step count *)
+		stepcount=0;
+		
+		(* -----Main routine----- *)
+		
+		(* Stopping condition *)
+		While[Length[Elist]>0 && stepcount < steplimit,
 
-			\[Epsilon]=Norm/@grad; (* arbitrary initial choice of step size *)
+			(* Choose initial steo size *)
+			\[Epsilon]=Norm/@grad;
+			
+			(* Calculate new transformation / function value *)
 			Mnew=MapThread[newM,{Mold,\[Epsilon],X}]; Enew=function[#,J0]&/@Mnew;
 			
 			(* Sub-rountine to ensure favourable step *)
@@ -60,33 +73,39 @@ ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_,
 			,{item,Thread[{Eold,Enew,Mold,Mnew,X,\[Epsilon]}]}
 			];
 		
-		Mold=MnewList; Eold=function[#,J0]&/@Mold; grad=gradfunction[#,J0,K]&/@Mold; X=(-#).K/Norm[#]&/@grad; (* Define function values and gradient for new values *) 
-		AppendTo[Elist,Eold]; (* Append function value to funtion value list *)
-		stepcount++ (* Update step count *)
+		(* Define function values and gradient for new values *) 
+		Mold=MnewList; Eold=function[#,J0]&/@Mold; grad=gradfunction[#,J0,K]&/@Mold; X=(-#).K/Norm[#]&/@grad; 
+		
+		(* Append function value to funtion value list and same for norm *)
+		Elist=Table[AppendTo[Elist[[i]],Eold[[i]]],{i,dimM0}]; NormList=Table[AppendTo[NormList[[i]],(Norm[#]&/@grad)[[i]]],{i,dimM0}];
+		
+		(* Update step count *)
+		stepcount++;
+		
+		(* Check individual strands for stopping criterion *)
+		StopQ=If[Norm[#]>tol,0,Null]&/@grad; (* - check for stopping criterion *)
+		
+		ordering=StopQ//Ordering; (* - rearrange *)
+		Nulls=Count[StopQ,Null]; dimM0=dimM0-Nulls;
+
+		(* - drop stopped strands *)
+		Mold=Mold[[ordering]]//Drop[#,-Nulls]&; Eold=Eold[[ordering]]//Drop[#,-Nulls]&; grad=grad[[ordering]]//Drop[#,-Nulls]&; X=X[[ordering]]//Drop[#,-Nulls]&;
+		
+		(* - add stopped strands to results and remove from Elist *)
+		If[Nulls!=0, FinalElist=AppendTo[FinalElist,Take[Elist,-Nulls]]; Elist=Elist[[ordering]]//Drop[#,-Nulls]&; 
+					FinalNormList=AppendTo[FinalNormList,Take[NormList,-Nulls]]; NormList=NormList[[ordering]]//Drop[#,-Nulls]&;,];
+		
 		]; 
 	
+	FinalElist=FinalElist//Flatten[#,1]&; FinalNormList=FinalNormList//Flatten[#,1]&;
+	FinalE=Take[#,-1]&/@FinalElist//Flatten;
 	(* Output: final function value, list of all values, number of iterations *)
-	Return[{Enew, Elist, Length[Elist]}]
+	Return[{FinalE, FinalElist, Length/@FinalElist,FinalNormList}]
 ];
 
 End[]
 
 EndPackage[]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
