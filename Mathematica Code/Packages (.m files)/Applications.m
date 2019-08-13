@@ -52,7 +52,7 @@ EoPFerm[ResAA_]:=Function[{M,J0}, Module[{n,D,logD},
 	n=Length[J0];
 	D=(M.(IdentityMatrix[n]+I J0).invMSp[M]/2)[[ResAA,ResAA]];
 	logD=ConditionalLog[D];
-	Re[-Tr[D.Mat]]//Chop]
+	Re[-Tr[D.logD]]//Chop]
 ];
 
 (* Entanglement of purification - gradient *)
