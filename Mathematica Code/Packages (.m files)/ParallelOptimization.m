@@ -8,9 +8,10 @@ Begin["Private`"]
 
 ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_, dimB_}, tol_, steplimit_:\[Infinity]]:=
 
-	Module[{dim, Ktype, KA, KB, K, Mold, Mnew, Eold, Enew, FinalE, Elist, FinalElist, grad, X, \[Epsilon], stepcount, newM, MnewList, NormList, FinalNormList, dimM0, ordering, StopQ, Nulls, NullsList},
+	Module[{dim, Ktype, KA, KB, K, Mold, Mnew, Eold, Enew, FinalE, Elist, FinalElist, grad, X, \[Epsilon], stepcount, newM, 
+	MnewList, NormList, FinalNormList, dimM0, ordering, StopQ, Nulls, NullsList, CorrList, DelList, pos, M0list, FinalM0list},
 		
-		dimM0=Length[M0]; FinalElist=List[]; FinalNormList=List[];
+		dimM0=Length[M0]; FinalElist=List[]; FinalNormList=List[]; CorrList=List[]; M0list=M0; FinalM0list=List[];
 		
 		(* Generate Lie algebra basis *)
 		KA=ToExpression[basisA][dimA]; KB=ToExpression[basisB][dimB];
@@ -53,7 +54,8 @@ ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_,
 		
 		(* Stopping condition *)
 		While[Length[Elist]>0 && stepcount < steplimit,
-
+		(* While[Length[Elist]\[Equal]Length[M0] && stepcount<steplimit, *)
+		
 			(* Choose initial steo size *)
 			\[Epsilon]=Norm/@grad;
 			
@@ -63,12 +65,14 @@ ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_,
 			(* Sub-rountine to ensure favourable step *)
 			MnewList=List[];
 			Do[
-			Module[{eold=item[[1]],enew=item[[2]],mold=item[[3]],mnew=item[[4]],x=item[[5]],s=item[[6]]},
+			Module[{eold=item[[1]],enew=item[[2]],mold=item[[3]],mnew=item[[4]],x=item[[5]],s=item[[6]],corr},
+				corr=0;
 				While[enew>eold,
-					s=s/2;
+					s=s/2; corr++;
 					mnew=newM[mold,s,x]; enew=function[mnew,J0];
 				];
-				AppendTo[MnewList,mnew]
+				AppendTo[MnewList,mnew];
+				AppendTo[CorrList,corr];
 			];
 			,{item,Thread[{Eold,Enew,Mold,Mnew,X,\[Epsilon]}]}
 			];
@@ -80,27 +84,27 @@ ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_,
 		Elist=Table[AppendTo[Elist[[i]],Eold[[i]]],{i,dimM0}]; NormList=Table[AppendTo[NormList[[i]],(Norm[#]&/@grad)[[i]]],{i,dimM0}];
 		
 		(* Update step count *)
-		stepcount++;
+		stepcount++;		
 		
 		(* Check individual strands for stopping criterion *)
-		StopQ=If[Norm[#]>tol,0,Null]&/@grad; (* - check for stopping criterion *)
-		
+		StopQ=If[Norm[#]>tol,0,Null]&/@grad; (* - check for stopping criterion *)		
 		ordering=StopQ//Ordering; (* - rearrange *)
 		Nulls=Count[StopQ,Null]; dimM0=dimM0-Nulls;
 
 		(* - drop stopped strands *)
 		Mold=Mold[[ordering]]//Drop[#,-Nulls]&; Eold=Eold[[ordering]]//Drop[#,-Nulls]&; grad=grad[[ordering]]//Drop[#,-Nulls]&; X=X[[ordering]]//Drop[#,-Nulls]&;
+		M0list=M0list[[ordering]]; AppendTo[FinalM0list,Take[M0list,-Nulls]]; M0list=M0list//Drop[#,-Nulls]&;
 		
 		(* - add stopped strands to results and remove from Elist *)
 		If[Nulls!=0, FinalElist=AppendTo[FinalElist,Take[Elist,-Nulls]]; Elist=Elist[[ordering]]//Drop[#,-Nulls]&; 
 					FinalNormList=AppendTo[FinalNormList,Take[NormList,-Nulls]]; NormList=NormList[[ordering]]//Drop[#,-Nulls]&;,];
-		
 		]; 
 	
 	FinalElist=FinalElist//Flatten[#,1]&; FinalNormList=FinalNormList//Flatten[#,1]&;
 	FinalE=Take[#,-1]&/@FinalElist//Flatten;
+	
 	(* Output: final function value, list of all values, number of iterations *)
-	Return[{FinalE, FinalElist, Length/@FinalElist,FinalNormList}]
+	Return[{FinalE, FinalElist, Length/@FinalElist, FinalNormList, CorrList, FinalM0list//Flatten[#,1]&}]
 ];
 
 End[]
