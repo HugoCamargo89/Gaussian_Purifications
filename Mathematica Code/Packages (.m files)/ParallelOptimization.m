@@ -12,9 +12,9 @@ ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_,
 			Mold, Mnew, Eold, Enew, (* Updating function values *)
 			grad, Normgrad, X, \[Epsilon], newM, GenerateM, (* Movement *)
 			Elist, FinalElist, MnewList, NormList, FinalNormList, M0list, FinalM0list, (* Tracking values *)
-			stepcount, dimM0, ordering, StopQ, Nulls, NullsList, CorrList, SortQ, order}, (* Tracking trajectories *) 
+			stepcount, dimM0, initialdimM0, CorrList, order, keepnumber, loosenumber}, (* Tracking trajectories *) 
 		
-		dimM0=Length[M0]; FinalElist=List[]; FinalNormList=List[]; CorrList=List[]; M0list=M0; FinalM0list=List[];
+		initialdimM0=Length[M0]; dimM0=Length[M0]; CorrList=List[]; M0list=M0; FinalElist=List[]; FinalNormList=List[];
 		
 		(* Generate Lie algebra basis *)
 		KA=ToExpression[basisA][dimA]; KB=ToExpression[basisB][dimB];
@@ -82,23 +82,28 @@ ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_,
 		stepcount++;		
 		
 		(* Checking trajectories *)
-		If[stepcount/20//IntegerQ && Length[Elist]>1,
-			order=Ordering[Eold,All,Greater];
-			{Mold, Eold, grad, Normgrad, X}=Drop[#[[order]],Round[dimM0/2]]&/@{Mold, Eold, grad, Normgrad, X};
+		If[stepcount/4//IntegerQ && Length[Elist]>1,
 			
-			M0list=M0list[[order]]; FinalM0list=AppendTo[FinalM0list,Take[M0list,Round[dimM0/2]]]; M0list=Drop[M0list,Round[dimM0/2]]; dimM0=dimM0-Round[dimM0/2];
-			Elist=Elist[[order]]; FinalElist=AppendTo[FinalElist,Take[Elist,Round[dimM0/2]]]; Elist=Drop[Elist,Round[dimM0/2]];
-			NormList=NormList[[order]]; FinalNormList=AppendTo[FinalNormList,Take[NormList,Round[dimM0/2]]]; NormList=Drop[NormList,Round[dimM0/2]];
+			(* Retain most promising 20% *)
+			keepnumber=If[(.2 dimM0//Round)==0,1,.2 dimM0//Round]; loosenumber=dimM0-keepnumber;
+			
+			order=Ordering[Eold,All,Less];
+			FinalElist=AppendTo[FinalElist,Take[Elist[[order]],-loosenumber]]; FinalNormList=AppendTo[FinalNormList,Take[NormList[[order]],-loosenumber]];
+			{Mold, Eold, grad, Normgrad, X, M0list}=Drop[#[[order]],-loosenumber]&/@{Mold, Eold, grad, Normgrad, X, M0list}; dimM0=dimM0-loosenumber;
 			];	
 		];
-		If[Length[Elist]==1, FinalElist=AppendTo[FinalElist,Take[Elist,1]]; FinalNormList=AppendTo[FinalNormList,Take[NormList,1]]; FinalM0list=AppendTo[FinalM0list,Take[M0list,1]]; ];
+		If[Length[Elist]==1, FinalElist=AppendTo[FinalElist,Take[Elist,1]]; FinalNormList=AppendTo[FinalNormList,Take[NormList,1]]; ];
 	
 	FinalElist=FinalElist//Flatten[#,1]&; FinalNormList=FinalNormList//Flatten[#,1]&;
 	
 	(* --- Output --- *)
-	Return[{Take[#,-1]&/@FinalElist//Flatten, FinalElist, Length/@FinalElist, CorrList, FinalNormList, Flatten[FinalM0list,1]}]
+	(* Return[{Take[#,-1]&/@FinalElist//Flatten, FinalElist, Length/@FinalElist, CorrList, FinalNormList, Flatten[FinalM0list,1]}] *)
+	Return[{Eold[[All]], FinalElist, Length/@FinalElist, FinalNormList, CorrList, M0list[[1]]}]
 ];
 
 End[]
 
 EndPackage[]
+
+
+
