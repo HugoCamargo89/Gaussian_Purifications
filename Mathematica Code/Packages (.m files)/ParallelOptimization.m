@@ -8,8 +8,11 @@ Begin["Private`"]
 
 ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_, dimB_}, tol_, steplimit_:\[Infinity]]:=
 
-	Module[{dim, Ktype, KA, KB, K, Mold, Mnew, Eold, Enew, FinalE, Elist, FinalElist, grad, X, \[Epsilon], stepcount, newM, 
-	MnewList, NormList, FinalNormList, dimM0, ordering, StopQ, Nulls, NullsList, CorrList, DelList, pos, M0list, FinalM0list},
+	Module[{dim, Ktype, KA, KB, K, (* Lie algebra basis *)
+			Mold, Mnew, Eold, Enew, (* Updating function values *)
+			grad, Normgrad, X, \[Epsilon], newM, GenerateM, (* Movement *)
+			Elist, FinalElist, MnewList, NormList, FinalNormList, M0list, FinalM0list, (* Tracking values *)
+			stepcount, dimM0, ordering, StopQ, Nulls, NullsList, CorrList, SortQ, order}, (* Tracking trajectories *) 
 		
 		dimM0=Length[M0]; FinalElist=List[]; FinalNormList=List[]; CorrList=List[]; M0list=M0; FinalM0list=List[];
 		
@@ -39,13 +42,18 @@ ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_,
 			(* Case 3: Both A and B are varied *)
 			True, newM[m_,s_,x_]:=m.approxExp[s,x]];
 		
+		(* Sub-routine *)
+		GenerateM[\[Epsilon]_,Mold_,Mnew_,Eold_,Enew_,X_]:=Module[{s=\[Epsilon], enew=Enew, corr=0, mnew=Mnew},
+			While[enew>Eold, s=s/2; corr++; mnew=newM[Mold,s,X]; enew=function[mnew,J0];]; AppendTo[CorrList,corr]; Return[{mnew//SparseArray,enew}]];
+		
+		
 		(* --------Iteration-------- *)
 		
 		(* Define function values and gradient for initial values *) 
-		Mold=M0; Eold=function[#,J0]&/@Mold; grad=gradfunction[#,J0,K]&/@Mold; X=(-#).K/Norm[#]&/@grad; 
+		Mold=M0; Eold=function[#,J0]&/@Mold; grad=gradfunction[#,J0,K]&/@Mold; Normgrad=Norm/@grad; X=SparseArray/@MapThread[(-#1).K/Norm[#2]&,{grad,Normgrad}]; 
 		
 		(* Append function value to funtion value list *)
-		Elist=Partition[Eold,1]; NormList=Partition[Norm[#]&/@grad,1];
+		Elist=Partition[Eold,1]; NormList=Partition[Normgrad,1];
 		
 		(* Initialise step count *)
 		stepcount=0;
@@ -53,63 +61,44 @@ ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_,
 		(* -----Main routine----- *)
 		
 		(* Stopping condition *)
-		While[Length[Elist]>0 && stepcount < steplimit,
-		(* While[Length[Elist]\[Equal]Length[M0] && stepcount<steplimit, *)
+		While[AllTrue[Normgrad,#>tol&] && stepcount < steplimit,
 		
-			(* Choose initial steo size *)
-			\[Epsilon]=Norm/@grad;
+			(* Choose initial step size *)
+			\[Epsilon]=Normgrad;
 			
 			(* Calculate new transformation / function value *)
 			Mnew=MapThread[newM,{Mold,\[Epsilon],X}]; Enew=function[#,J0]&/@Mnew;
 			
 			(* Sub-rountine to ensure favourable step *)
-			MnewList=List[];
-			Do[
-			Module[{eold=item[[1]],enew=item[[2]],mold=item[[3]],mnew=item[[4]],x=item[[5]],s=item[[6]],corr},
-				corr=0;
-				While[enew>eold,
-					s=s/2; corr++;
-					mnew=newM[mold,s,x]; enew=function[mnew,J0];
-				];
-				AppendTo[MnewList,mnew];
-				AppendTo[CorrList,corr];
-			];
-			,{item,Thread[{Eold,Enew,Mold,Mnew,X,\[Epsilon]}]}
-			];
+			{Mnew,Enew}=MapThread[GenerateM,{\[Epsilon],Mold,Mnew,Eold,Enew,X}]//Transpose;
 		
 		(* Define function values and gradient for new values *) 
-		Mold=MnewList; Eold=function[#,J0]&/@Mold; grad=gradfunction[#,J0,K]&/@Mold; X=(-#).K/Norm[#]&/@grad; 
+		Mold=Mnew; Eold=Enew; grad=gradfunction[#,J0,K]&/@Mold; Normgrad=Norm/@grad; X=SparseArray/@MapThread[(-#1).K/Norm[#2]&,{grad,Normgrad}];
 		
 		(* Append function value to funtion value list and same for norm *)
-		Elist=Table[AppendTo[Elist[[i]],Eold[[i]]],{i,dimM0}]; NormList=Table[AppendTo[NormList[[i]],(Norm[#]&/@grad)[[i]]],{i,dimM0}];
+		Elist=Table[AppendTo[Elist[[i]],Eold[[i]]],{i,dimM0}]; NormList=Table[AppendTo[NormList[[i]],Normgrad[[i]]],{i,dimM0}];
 		
 		(* Update step count *)
 		stepcount++;		
 		
-		(* Check individual strands for stopping criterion *)
-		StopQ=If[Norm[#]>tol,0,Null]&/@grad; (* - check for stopping criterion *)		
-		ordering=StopQ//Ordering; (* - rearrange *)
-		Nulls=Count[StopQ,Null]; dimM0=dimM0-Nulls;
-
-		(* - drop stopped strands *)
-		Mold=Mold[[ordering]]//Drop[#,-Nulls]&; Eold=Eold[[ordering]]//Drop[#,-Nulls]&; grad=grad[[ordering]]//Drop[#,-Nulls]&; X=X[[ordering]]//Drop[#,-Nulls]&;
-		M0list=M0list[[ordering]]; AppendTo[FinalM0list,Take[M0list,-Nulls]]; M0list=M0list//Drop[#,-Nulls]&;
-		
-		(* - add stopped strands to results and remove from Elist *)
-		If[Nulls!=0, FinalElist=AppendTo[FinalElist,Take[Elist,-Nulls]]; Elist=Elist[[ordering]]//Drop[#,-Nulls]&; 
-					FinalNormList=AppendTo[FinalNormList,Take[NormList,-Nulls]]; NormList=NormList[[ordering]]//Drop[#,-Nulls]&;,];
-		]; 
+		(* Checking trajectories *)
+		If[stepcount/20//IntegerQ && Length[Elist]>1,
+			order=Ordering[Eold,All,Greater];
+			{Mold, Eold, grad, Normgrad, X}=Drop[#[[order]],Round[dimM0/2]]&/@{Mold, Eold, grad, Normgrad, X};
+			
+			M0list=M0list[[order]]; FinalM0list=AppendTo[FinalM0list,Take[M0list,Round[dimM0/2]]]; M0list=Drop[M0list,Round[dimM0/2]]; dimM0=dimM0-Round[dimM0/2];
+			Elist=Elist[[order]]; FinalElist=AppendTo[FinalElist,Take[Elist,Round[dimM0/2]]]; Elist=Drop[Elist,Round[dimM0/2]];
+			NormList=NormList[[order]]; FinalNormList=AppendTo[FinalNormList,Take[NormList,Round[dimM0/2]]]; NormList=Drop[NormList,Round[dimM0/2]];
+			];	
+		];
+		If[Length[Elist]==1, FinalElist=AppendTo[FinalElist,Take[Elist,1]]; FinalNormList=AppendTo[FinalNormList,Take[NormList,1]]; FinalM0list=AppendTo[FinalM0list,Take[M0list,1]]; ];
 	
 	FinalElist=FinalElist//Flatten[#,1]&; FinalNormList=FinalNormList//Flatten[#,1]&;
-	FinalE=Take[#,-1]&/@FinalElist//Flatten;
 	
-	(* Output: final function value, list of all values, number of iterations *)
-	Return[{FinalE, FinalElist, Length/@FinalElist, FinalNormList, CorrList, FinalM0list//Flatten[#,1]&}]
+	(* --- Output --- *)
+	Return[{Take[#,-1]&/@FinalElist//Flatten, FinalElist, Length/@FinalElist, CorrList, FinalNormList, Flatten[FinalM0list,1]}]
 ];
 
 End[]
 
 EndPackage[]
-
-
-
