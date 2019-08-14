@@ -8,13 +8,14 @@ Begin["Private`"]
 
 ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_, dimB_}, tol_, steplimit_:\[Infinity]]:=
 
-	Module[{dim, Ktype, KA, KB, K, (* Lie algebra basis *)
+	Module[{KA, KB, K, (* Lie algebra basis *)
 			Mold, Mnew, Eold, Enew, (* Updating function values *)
 			grad, Normgrad, X, \[Epsilon], newM, GenerateM, (* Movement *)
-			Elist, FinalElist, MnewList, NormList, FinalNormList, M0list, FinalM0list, (* Tracking values *)
-			stepcount, dimM0, initialdimM0, CorrList, order1, order2, order, keepnumber, loosenumber}, (* Tracking trajectories *) 
+			M0list, (* Tracking values *)
+			stepcount, dimM0, CorrList, order1, order2, order, keepnumber, loosenumber, donelist, (* Tracking trajectories *) 
+			FinalE, FinalM}, (* Results *)
 		
-		initialdimM0=Length[M0]; dimM0=Length[M0]; CorrList=List[]; M0list=M0; FinalElist=List[]; FinalNormList=List[];
+		dimM0=Length[M0]; CorrList=List[]; M0list=M0; donelist=List[];
 		
 		(* Generate Lie algebra basis *)
 		KA=ToExpression[basisA][dimA]; KB=ToExpression[basisB][dimB];
@@ -46,17 +47,14 @@ ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_,
 		GenerateM[\[Epsilon]_,Mold_,Mnew_,Eold_,Enew_,X_]:=Module[{s=\[Epsilon], enew=Enew, corr=0, mnew=Mnew},
 			While[enew>Eold, s=s/2; corr++; mnew=newM[Mold,s,X]; enew=function[mnew,J0];]; AppendTo[CorrList,corr]; Return[{mnew//SparseArray,enew}]];
 		
-		
 		(* --------Iteration-------- *)
 		
 		(* Define function values and gradient for initial values *) 
 		Mold=M0; Eold=function[#,J0]&/@Mold; grad=gradfunction[#,J0,K]&/@Mold; Normgrad=Norm/@grad; X=SparseArray/@MapThread[(-#1).K/Norm[#2]&,{grad,Normgrad}]; 
 		
-		(* Append function value to funtion value list *)
-		Elist=Partition[Eold,1]; NormList=Partition[Normgrad,1];
-		
 		(* Initialise step count *)
 		stepcount=0;
+	
 		
 		(* -----Main routine----- *)
 		
@@ -75,33 +73,32 @@ ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_,
 		(* Define function values and gradient for new values *) 
 		Mold=Mnew; Eold=Enew; grad=gradfunction[#,J0,K]&/@Mold; Normgrad=Norm/@grad; X=SparseArray/@MapThread[(-#1).K/Norm[#2]&,{grad,Normgrad}];
 		
-		(* Append function value to funtion value list and same for norm *)
-		Elist=Table[AppendTo[Elist[[i]],Eold[[i]]],{i,dimM0}]; NormList=Table[AppendTo[NormList[[i]],Normgrad[[i]]],{i,dimM0}];
-		
 		(* Update step count *)
-		stepcount++;		
-		
+		stepcount++;
+											
 		(* Checking trajectories *)
-		If[stepcount/5//IntegerQ && Length[Elist]>1,
+		If[stepcount/5//IntegerQ && Length[M0list]>1,
 			
 			(* Retain most promising 20% *)
-			keepnumber=If[(.2 dimM0//Round)==0,1,.2 dimM0//Round];
+			keepnumber=If[(.2 dimM0//Round)==0,1,.2 dimM0//Round]; 
 			
-			order1=Ordering[Eold,All,Less]; order2=Ordering[Normgrad,All,Greater];
-			If[keepnumber>1,order=Join[Take[order1,keepnumber],Take[order2,keepnumber]],order=Take[order1,keepnumber]]; Print[order];
+			order1=Ordering[Eold,All,Less]; order2=Ordering[Normgrad,All,Greater]; 
+			If[keepnumber>1,order=Join[Take[order1,keepnumber],Take[order2,keepnumber]],order=Take[order1,keepnumber]];
 			
-			FinalElist=AppendTo[FinalElist,Elist[[order]]]; FinalNormList=AppendTo[FinalNormList,NormList[[order]]];
 			{Mold, Eold, grad, Normgrad, X, M0list}=(#[[order]])&/@{Mold, Eold, grad, Normgrad, X, M0list}; dimM0=Length[order];
 			
-			];	
+			];
+			
+		(* Check overall stopping criterion *)
+		If[#<tol,AppendTo[donelist,Position[Normgrad,#]]]&/@Normgrad;			
+			
 		];
-		If[Length[Elist]==1, FinalElist=AppendTo[FinalElist,Take[Elist,1]]; FinalNormList=AppendTo[FinalNormList,Take[NormList,1]]; ];
 	
-	FinalElist=FinalElist//Flatten[#,1]&; FinalNormList=FinalNormList//Flatten[#,1]&;
+	FinalE=Min[Eold[[donelist//Flatten]]]; FinalM=M0list[[donelist//Flatten]];
 	
 	(* --- Output --- *)
-	(* Return[{Take[#,-1]&/@FinalElist//Flatten, FinalElist, Length/@FinalElist, CorrList, FinalNormList, Flatten[FinalM0list,1]}] *)
-	Return[{Eold[[All]], FinalElist, Length/@FinalElist, FinalNormList, CorrList, M0list[[1]]}]
+
+	Return[{FinalE,FinalM,CorrList//Total}]
 ];
 
 End[]
