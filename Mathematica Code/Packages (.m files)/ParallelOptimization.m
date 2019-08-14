@@ -12,7 +12,7 @@ ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_,
 			Mold, Mnew, Eold, Enew, (* Updating function values *)
 			grad, Normgrad, X, \[Epsilon], newM, GenerateM, (* Movement *)
 			Elist, FinalElist, MnewList, NormList, FinalNormList, M0list, FinalM0list, (* Tracking values *)
-			stepcount, dimM0, initialdimM0, CorrList, order, keepnumber, loosenumber}, (* Tracking trajectories *) 
+			stepcount, dimM0, initialdimM0, CorrList, order1, order2, order, keepnumber, loosenumber}, (* Tracking trajectories *) 
 		
 		initialdimM0=Length[M0]; dimM0=Length[M0]; CorrList=List[]; M0list=M0; FinalElist=List[]; FinalNormList=List[];
 		
@@ -82,14 +82,17 @@ ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_,
 		stepcount++;		
 		
 		(* Checking trajectories *)
-		If[stepcount/4//IntegerQ && Length[Elist]>1,
+		If[stepcount/5//IntegerQ && Length[Elist]>1,
 			
 			(* Retain most promising 20% *)
-			keepnumber=If[(.2 dimM0//Round)==0,1,.2 dimM0//Round]; loosenumber=dimM0-keepnumber;
+			keepnumber=If[(.2 dimM0//Round)==0,1,.2 dimM0//Round];
 			
-			order=Ordering[Eold,All,Less];
-			FinalElist=AppendTo[FinalElist,Take[Elist[[order]],-loosenumber]]; FinalNormList=AppendTo[FinalNormList,Take[NormList[[order]],-loosenumber]];
-			{Mold, Eold, grad, Normgrad, X, M0list}=Drop[#[[order]],-loosenumber]&/@{Mold, Eold, grad, Normgrad, X, M0list}; dimM0=dimM0-loosenumber;
+			order1=Ordering[Eold,All,Less]; order2=Ordering[Normgrad,All,Greater];
+			If[keepnumber>1,order=Join[Take[order1,keepnumber],Take[order2,keepnumber]],order=Take[order1,keepnumber]]; Print[order];
+			
+			FinalElist=AppendTo[FinalElist,Elist[[order]]]; FinalNormList=AppendTo[FinalNormList,NormList[[order]]];
+			{Mold, Eold, grad, Normgrad, X, M0list}=(#[[order]])&/@{Mold, Eold, grad, Normgrad, X, M0list}; dimM0=Length[order];
+			
 			];	
 		];
 		If[Length[Elist]==1, FinalElist=AppendTo[FinalElist,Take[Elist,1]]; FinalNormList=AppendTo[FinalNormList,Take[NormList,1]]; ];
