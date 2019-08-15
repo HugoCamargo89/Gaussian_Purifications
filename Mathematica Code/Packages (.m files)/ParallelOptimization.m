@@ -9,13 +9,13 @@ Begin["Private`"]
 ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_, dimB_}, tol_, steplimit_:\[Infinity]]:=
 
 	Module[{KA, KB, K, (* Lie algebra basis *)
-			Mold, Mnew, Eold, Enew, (* Updating function values *)
+			Mold, Mnew, Eold, Enew,(* Updating function values *)
 			grad, Normgrad, X, \[Epsilon], newM, GenerateM, (* Movement *)
-			M0list, (* Tracking values *)
+			M0list, Elist, Normlist, diffE, diffNorm, (* Tracking values *)
 			stepcount, dimM0, CorrList, order1, order2, order, keepnumber, loosenumber, donelist, (* Tracking trajectories *) 
-			FinalE, FinalM}, (* Results *)
+			FinalE, FinalM, FinalElist, FinalNormlist}, (* Results *)
 		
-		dimM0=Length[M0]; CorrList=List[]; M0list=M0; donelist=List[];
+		dimM0=Length[M0]; CorrList=List[]; M0list=M0; donelist=List[]; Elist=List[];
 		
 		(* Generate Lie algebra basis *)
 		KA=ToExpression[basisA][dimA]; KB=ToExpression[basisB][dimB];
@@ -52,6 +52,8 @@ ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_,
 		(* Define function values and gradient for initial values *) 
 		Mold=M0; Eold=function[#,J0]&/@Mold; grad=gradfunction[#,J0,K]&/@Mold; Normgrad=Norm/@grad; X=SparseArray/@MapThread[(-#1).K/Norm[#2]&,{grad,Normgrad}]; 
 		
+		Elist={Eold}//Transpose; Normlist={Normgrad}//Transpose; diffE=Eold; diffNorm=Normgrad; 
+		
 		(* Initialise step count *)
 		stepcount=0;
 	
@@ -59,7 +61,7 @@ ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_,
 		(* -----Main routine----- *)
 		
 		(* Stopping condition *)
-		While[AllTrue[Normgrad,#>tol&] && stepcount < steplimit,
+		While[AllTrue[Normgrad,#>tol&] && stepcount < steplimit && AllTrue[diffE,#>10^-10&],
 		
 			(* Choose initial step size *)
 			\[Epsilon]=Normgrad;
@@ -72,6 +74,8 @@ ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_,
 		
 		(* Define function values and gradient for new values *) 
 		Mold=Mnew; Eold=Enew; grad=gradfunction[#,J0,K]&/@Mold; Normgrad=Norm/@grad; X=SparseArray/@MapThread[(-#1).K/Norm[#2]&,{grad,Normgrad}];
+		Elist=Elist//Transpose; Elist=AppendTo[Elist,Eold]//Transpose; Normlist=Normlist//Transpose; Normlist=AppendTo[Normlist,Normgrad]//Transpose;
+		diffE=(Abs[#[[-1]]-#[[-2]]]/#[[-1]])&/@Elist; diffNorm=Abs[#[[-1]]-#[[-2]]]&/@Normlist;
 		
 		(* Update step count *)
 		stepcount++;
@@ -85,20 +89,20 @@ ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_,
 			order1=Ordering[Eold,All,Less]; order2=Ordering[Normgrad,All,Greater]; 
 			If[keepnumber>1,order=Join[Take[order1,keepnumber],Take[order2,keepnumber]],order=Take[order1,keepnumber]];
 			
-			{Mold, Eold, grad, Normgrad, X, M0list}=(#[[order]])&/@{Mold, Eold, grad, Normgrad, X, M0list}; dimM0=Length[order];
-			
-			];
-			
-		(* Check overall stopping criterion *)
-		If[#<tol,AppendTo[donelist,Position[Normgrad,#]]]&/@Normgrad;			
-			
+			{Mold, Eold, grad, Normgrad, X, M0list, Elist, Normlist, diffE, diffNorm}=(#[[order]])&/@{Mold, Eold, grad, Normgrad, X, M0list, Elist, Normlist, diffE, diffNorm}; dimM0=Length[order];
+			];			
 		];
 	
-	FinalE=Min[Eold[[donelist//Flatten]]]; FinalM=M0list[[donelist//Flatten]];
+	(* Check overall stopping criterion *)
+	If[#<tol,AppendTo[donelist,Position[Normgrad,#]]]&/@Normgrad;
+	If[stepcount >= steplimit,AppendTo[donelist,Position[Eold,Min[Eold]]];Print["Optimisation terminated by step limit."]];
+	If[#<10^-10,AppendTo[donelist,Position[diffE,#]]]&/@diffE;
+	
+	FinalE=Min[Eold[[donelist//Flatten]]]; FinalM=M0list[[donelist//Flatten]]; FinalElist=Elist[[donelist//Flatten]]//Flatten; FinalNormlist=Normlist[[donelist//Flatten]]//Flatten; 
 	
 	(* --- Output --- *)
 
-	Return[{FinalE,FinalM,CorrList//Total}]
+	Return[{FinalE,FinalM,CorrList//Total,FinalElist,FinalNormlist}]
 ];
 
 End[]
