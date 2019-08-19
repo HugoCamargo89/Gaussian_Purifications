@@ -6,11 +6,11 @@ ParallelOptimise::usage="Optimisation of a scalar function over the manifold of 
 
 Begin["Private`"]
 
-ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_, dimB_}, tol_, steplimit_:\[Infinity]]:=
+ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_, dimB_}, tol_, del2_:False, steplimit_:\[Infinity]]:=
 
 	Module[{KA, KB, K, (* Lie algebra basis *)
 			Mold, Mnew, Eold, Enew,(* Updating function values *)
-			grad, Normgrad, X, \[Epsilon], newM, GenerateM, (* Movement *)
+			grad, Normgrad, X, \[Epsilon], newM, GenerateM, Eplus, Eminus, grad2, (* Movement *)
 			M0list, Elist, Normlist, diffE, diffNorm, (* Tracking values *)
 			stepcount, dimM0, CorrList, order1, order2, order, keepnumber, loosenumber, donelist, (* Tracking trajectories *) 
 			FinalE, FinalM, FinalElist, FinalNormlist}, (* Results *)
@@ -64,7 +64,11 @@ ParallelOptimise[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_,
 		While[AllTrue[Normgrad,#>tol&] && stepcount < steplimit && AllTrue[diffE,#>10^-10&],
 		
 			(* Choose initial step size *)
-			\[Epsilon]=Normgrad;
+			\[Epsilon]=If [del2,
+			Eplus=function[#,J0]&/@MapThread[newM,{Mold,ConstantArray[.01,Length[X]],X}];
+			Eminus=function[#,J0]&/@MapThread[newM,{Mold,ConstantArray[-.01,Length[X]],X}];
+			grad2=(Eplus-2Eold+Eminus)/(.01)^2; Abs[Normgrad/grad2],
+			Normgrad/2];
 			
 			(* Calculate new transformation / function value *)
 			Mnew=MapThread[newM,{Mold,\[Epsilon],X}]; Enew=function[#,J0]&/@Mnew;
