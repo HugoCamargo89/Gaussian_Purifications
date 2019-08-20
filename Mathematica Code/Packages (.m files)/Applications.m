@@ -22,16 +22,16 @@ Begin["Private`"]
 (* Complexity of purification - function *)
 CoPBos[JT_]:=Function[{M,Jref0},Module[{invM,D},
 	D=M.Jref0.invMSp[M].Inverse[JT]; 
-	Sqrt[Total[Log[#1]^2&/@Eigenvalues[D]]/8]]
+	Re[Sqrt[Total[Log[#1]^2&/@Eigenvalues[D]]/8]]]
 ];
 
 (* Complexity of purification - gradient *)
 CoPgradBos[JT_]:=Function[{M,Jref0,K},Module[{dimA,dimB,invM,invJT,D,invD,dD},
 	dimB=Length[K[[1]]]; dimA=Length[M]-dimB;
 	invM=invMSp[M]; invJT=Inverse[JT];
-	D=M.Jref0.invM.Inverse[JT]; invD=Inverse[D];
+	D=M.Jref0.invM.invJT; invD=Inverse[D];
 	dD=Table[M.(KIi.Jref0-Jref0.KIi).invM.invJT,{KIi,K}];
-	Table[2Tr[MatrixLog[D].invD.dDi],{dDi,dD}]]
+	Table[Re[2Tr[ConditionalLog[D].invD.dDi]],{dDi,dD}]]
 ];
 
 (* Function to generate restriction - for use in EoP *)
