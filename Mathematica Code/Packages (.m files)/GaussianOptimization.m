@@ -3,216 +3,188 @@
 BeginPackage["GaussianOptimization`"];
 
 
-$GOFunctions=Sort[{"GO\[CapitalOmega]qqpp","GO\[CapitalOmega]qpqp","GOTransformtoJ","GOTransform","GOMranSp","GOMranO","GOSpBasis","GOSpBasisNoUN","GOSpBasisNoU1","GOOBasis","GOapproxExp","GOlogfunction","GOConditionalLog","GOinvMSp","GOOptimize","GOExtractStdForm","GOConstructPurificationBos","GOConstructPurificationFerm"}];
-
-
-$GOApplicationsFunctions=Sort[{"GORestrictionAA","GOEoPBos","GOEoPFerm","GOEoPgradBos","GOEoPgradFerm","GOCoPBos","GOCoPgradBos"}];
-
-
 (* Optimization algorithm *)
-GOOptimize::usage="Optimization of a scalar function over the manifold of Gaussian states. 
+GOOptimize::usage="{ffinal,Mfinal,listStepSizeIterations,listfValues,listGradientNorms,metricG}=GOOptimize[f, df, Jinitial, listMinitial, {basisA, basisB}, {dimA, dimB}, tolerance, steplimit_:\[Infinity]]
 
-The algorithm initializes at at various specified starting points in the manifold, each of which defines a trajectory for the optimization. 
-At each multiple of 5 steps, the algorithm retains only the 20% of the trajectories with the lowest function values and highest gradient norm, 
-respectively. The optimization is terminated when the final remaining trajectory (or trajectories) first satisfies one of three stopping criteria: 
-a lower bound on the gradient norm, a limit on the number of iterations, and a relative difference in function value below \!\(\*SuperscriptBox[\(10\), \(-10\)]\). 
-
-\!\(\*
-StyleBox[\"Input\",\nFontSlant->\"Italic\"]\)\!\(\*
-StyleBox[\" \",\nFontSlant->\"Italic\"]\)\!\(\*
-StyleBox[\"arguments\",\nFontSlant->\"Italic\"]\)\!\(\*
-StyleBox[\" \",\nFontSlant->\"Italic\"]\)\!\(\*
-StyleBox[\"are\",\nFontSlant->\"Italic\"]\)\!\(\*
-StyleBox[\":\",\nFontSlant->\"Italic\"]\)\!\(\*
-StyleBox[\" \",\nFontSlant->\"Italic\"]\)
-\!\(\*
-StyleBox[\"(\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\"1\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\")\",\nFontWeight->\"Bold\"]\) function to be optimised f[ M, J0] 
-\!\(\*
-StyleBox[\"(\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\"2\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\")\",\nFontWeight->\"Bold\"]\) associated gradient function df[ M, J0, Kbasis] 
-\!\(\*
-StyleBox[\"(\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\"3\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\")\",\nFontWeight->\"Bold\"]\) initial J 
-\!\(\*
-StyleBox[\"(\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\"4\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\")\",\nFontWeight->\"Bold\"]\) list of initial transformations {M1,M2,...} 
-\!\(\*
-StyleBox[\"(\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\"5\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\")\",\nFontWeight->\"Bold\"]\) specification of basis types for subsystems A and B { 'basisA', 'basisB'} (must be strings and must specify 'None' if no optimization occurs in one subsystem) 
-\!\(\*
-StyleBox[\"(\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\"6\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\")\",\nFontWeight->\"Bold\"]\) no. of degrees of freedom in subsystems { dimA, dimB} (must specify dimB=0 and basisB='None' if there is no splitting into subsystems) 
-\!\(\*
-StyleBox[\"(\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\"7\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\")\",\nFontWeight->\"Bold\"]\) tolerance on norm of gradient as stopping criterion
-\!\(\*
-StyleBox[\"(\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\"8\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\")\",\nFontWeight->\"Bold\"]\) iteration limit as stopping criterion (default=infinity)
-
-\!\(\*
-StyleBox[\"Output\",\nFontSlant->\"Italic\"]\)\!\(\*
-StyleBox[\" \",\nFontSlant->\"Italic\"]\)\!\(\*
-StyleBox[\"arguments\",\nFontSlant->\"Italic\"]\)\!\(\*
-StyleBox[\" \",\nFontSlant->\"Italic\"]\)\!\(\*
-StyleBox[\"are\",\nFontSlant->\"Italic\"]\)\!\(\*
-StyleBox[\":\",\nFontSlant->\"Italic\"]\)\!\(\*
-StyleBox[\" \",\nFontSlant->\"Italic\"]\)
-\!\(\*
-StyleBox[\"(\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\"1\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\")\",\nFontWeight->\"Bold\"]\) f\!\(\*
-StyleBox[\"inal\",\nFontWeight->\"Plain\"]\)\!\(\*
-StyleBox[\" \",\nFontWeight->\"Plain\"]\)\!\(\*
-StyleBox[\"function\",\nFontWeight->\"Plain\"]\)\!\(\*
-StyleBox[\" \",\nFontWeight->\"Plain\"]\)\!\(\*
-StyleBox[\"value\",\nFontWeight->\"Plain\"]\)
-\!\(\*
-StyleBox[\"(\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\"2\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\")\",\nFontWeight->\"Bold\"]\) final transformation M 
-\!\(\*
-StyleBox[\"(\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\"3\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\")\",\nFontWeight->\"Bold\"]\) list of the no. of corrections of the step size per iteration 
-\!\(\*
-StyleBox[\"(\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\"4\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\")\",\nFontWeight->\"Bold\"]\) list of the function values for the final surviving trajectory 
-\!\(\*
-StyleBox[\"(\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\"5\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\")\",\nFontWeight->\"Bold\"]\) list of the values of the gradient norm for the final surviving trajectory 
-\!\(\*
-StyleBox[\"(\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\"6\",\nFontWeight->\"Bold\"]\)\!\(\*
-StyleBox[\")\",\nFontWeight->\"Bold\"]\) \!\(\*
-StyleBox[\"Natural\",\nFontWeight->\"Plain\"]\)\!\(\*
-StyleBox[\" \",\nFontWeight->\"Plain\"]\)\!\(\*
-StyleBox[\"metric\",\nFontWeight->\"Plain\"]\)\!\(\*
-StyleBox[\" \",\nFontWeight->\"Plain\"]\)\!\(\*
-StyleBox[\"on\",\nFontWeight->\"Plain\"]\)\!\(\*
-StyleBox[\" \",\nFontWeight->\"Plain\"]\)\!\(\*
-StyleBox[\"the\",\nFontWeight->\"Plain\"]\)\!\(\*
-StyleBox[\" \",\nFontWeight->\"Plain\"]\)\!\(\*
-StyleBox[\"manifold\",\nFontWeight->\"Plain\"]\)\!\(\*
-StyleBox[\" \",\nFontWeight->\"Plain\"]\)
+Optimization of a scalar function over the manifold of Gaussian states : 
+The algorithm initializes at the starting points in Minitial in the manifold, each of which defines a trajectory for the optimization. 
+At each multiple of 5 steps, the algorithm retains only the 20 % of the trajectories with the lowest function values and highest gradient 
+norm, respectively. The optimization is terminated when the final remaining trajectory (or trajectories) first satisfies one of three stopping criteria : 
+a lower bound on the gradient norm (tolerance), a limit on the number of iterations (steplimit), and a relative difference in function value below \!\(\*SuperscriptBox[\(10\), \(-10\)]\)
 ";
 
 
-(* Fundamental definitions and basic tools *)
-(* Symplectic forms and various matrices *)
-GO\[CapitalOmega]qqpp::usage="GO\[CapitalOmega]qqpp[ N] generates the symplectic form in basis (q1,q2,...,p1,p2,...) for N bosonic deg. of freedom";
+(* Symplectic forms / Covariance matrices *)
+GO\[CapitalOmega]qqpp::usage="GO\[CapitalOmega]qqpp[N] generates \[CapitalOmega] in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),...,\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...) for N deg. of freedom"
+GO\[CapitalOmega]qpqp::usage="GO\[CapitalOmega]qpqp[N] generates \[CapitalOmega] in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...) for N deg. of freedom"
+GO\[CapitalOmega]aabb::usage="GO\[CapitalOmega]aabb[N] generates \[CapitalOmega] in basis (\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),...,\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...) for N deg. of freedom"
+GO\[CapitalOmega]abab::usage="GO\[CapitalOmega]abab[N] generates \[CapitalOmega] in basis (\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...) for N deg. of freedom"
+
+GOGqqpp::usage="GOGqqpp[N] generates G in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),...,\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...) for N deg. of freedom"
+GOGqpqp::usage="GOGqpqp[N] generates G in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...) for N deg. of freedom"
+GOGaabb::usage="GOGaabb[N] generates G in basis (\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),...,\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...) for N deg. of freedom"
+GOGabab::usage="GOGabab[N] generates G in basis (\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...) for N deg. of freedom"
 
 
-GO\[CapitalOmega]qpqp::usage="GO\[CapitalOmega]qpqp[ N] generates the symplectic form in basis (q1,p1,q2,p2,...) for N bosonic deg. of freedom";
+(* Basis Transformation matrices *)
+(* Re-ordering *)
+GOqqppFROMqpqp::usage="GOqqppFROMqpqp[N] generates a basis transformation (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)\[Rule](\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),...,\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...) for N deg. of freedom";
+GOqpqpFROMqqpp::usage="GOqpqpFROMqqpp[N] generates a basis transformation (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),...,\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)\[Rule](\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...) for N deg. of freedom";
+GOaabbFROMabab::usage="GOaabbFROMabab[N] generates a basis transformation (\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...)\[Rule](\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),...,\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...) for N deg. of freedom";
+GOababFROMaabb::usage="GOababFROMaabb[N] generates a basis transformation (\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),...,\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...)\[Rule](\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...) for N deg. of freedom";
+(* q to a *)
+GOababFROMqpqp::usage="GOababFROMqpqp[N] generates a basis transformation (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)\[Rule](\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...) for N deg. of freedom";
+GOaabbFROMqpqp::usage="GOaabbFROMqpqp[N] generates a basis transformation (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)\[Rule](\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),...,\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...) for N deg. of freedom";
+GOababFROMqqpp::usage="GOababFROMqqpp[N] generates a basis transformation (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),...,\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)\[Rule](\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...) for N deg. of freedom";
+GOaabbFROMqqpp::usage="GOaabbFROMqqpp[N] generates a basis transformation (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),...,\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)\[Rule](\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),...,\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...) for N deg. of freedom";
+(* a to q *)
+GOqpqpFROMabab::usage="GOqpqpFROMabab[N] generates a basis transformation (\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...)\[Rule](\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...) for N deg. of freedom";
+GOqqppFROMabab::usage="GOqqppFROMabab[N] generates a basis transformation (\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...)\[Rule](\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),...,\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...) for N deg. of freedom";
+GOqpqpFROMaabb::usage="GOqpqpFROMaabb[N] generates a basis transformation (\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),...,\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...)\[Rule](\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...) for N deg. of freedom";
+GOqqppFROMaabb::usage="GOqqppFROMaabb[N] generates a basis transformation (\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),...,\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...)\[Rule](\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),...,\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...) for N deg. of freedom";
 
 
-GOTransformtoJ::usage="GOTransformtoJ[ G] generates the complex structure associated with a cov. matrix G by computing J=-G.\[CapitalOmega]";
+(* Transforming between structures *)
+GOTransformGtoJ::usage="GOTransformGtoJ[G,'Gbasis','Jbasis'] generates J in Jbasis associated with G in Gbasis";
+GOTransform\[CapitalOmega]toJ::usage="GOTransform\[CapitalOmega]toJ[\[CapitalOmega],'\[CapitalOmega]basis','Jbasis'] generates J in Jbasis associated with \[CapitalOmega] in \[CapitalOmega]basis";
+GOTransformJtoG::usage="GOTransformJtoG[J,'Jbasis','Gbasis'] generates G in Gbasis associated with J in Jbasis";
+GOTransformJto\[CapitalOmega]::usage="GOTransformJto\[CapitalOmega][J,'Jbasis','\[CapitalOmega]basis'] generates \[CapitalOmega] in \[CapitalOmega]basis associated with J in Jbasis";
 
 
-GOTransform::usage="GOTransform[ N] generates a N-dim. basis transformation matrix (q1,p1,q2,p2,...)\[Rule](q1,q2,...,p1,p2,...)";
-
-
-GOMranSp::usage="MranSp[ N] generates a random NxN symplectic matrix";
-
-
-GOMranO::usage="MranO[ N] generates a random NxN orthogonal matrix";
-
-
-(* Lie algebra bases *)
-GOSpBasis::usage="SpBasis[ N] generates sp(2N,R) Lie algebra basis";
-
-
-GOSpBasisNoUN::usage="spBasisNoUN[ N] generates sp(2N,R)/U(N) Lie algebra basis";
-
-
-GOSpBasisNoU1::usage="spBasisNoU1[ N] generates sp(2N,R)/U(1\!\(\*SuperscriptBox[\()\), \(N\)]\) Lie algebra basis";
-
-
-GOOBasis::usage="OBasis[ N] generates o(2N,R) Lie algebra basis";
-
-
-(* Purifications and the standard form *)
-GOExtractStdForm::usage="GOExtractStdForm[ G] returns the parameters for constructing the standard form of G (list of the \!\(\*SubscriptBox[\(r\), \(i\)]\) and the transformation matrix that puts G into standard form)";
-
-
-GOConstructPurificationBos::usage="GOConstructPurificationBos[ rlist, { dimA, dimB}] generates the complex structure for the (dimA+dimB)-dimensional purification of a dimA-dimensional bosonic Gaussian state in standard form";
-
-
-GOConstructPurificationFerm::usage="GOConstructPurificationBos[ rlist, { dimA, dimB}] generates the complex structure for the (dimA+dimB)-dimensional purification of a dimA-dimensional fermionic Gaussian state in standard form";
+(* Random matrices *)
+GOMranSp::usage="MranSp[n,'Mform'] generates a random nxn symplectic matrix in the basis Mform";
+GOMranO::usage="MranO[n,'Mform'] generates a random nxn orthogonal matrix in the basis Mform";
 
 
 (* Tools for computational efficiency *)
-GOapproxExp::usage="approxExp[ \[Epsilon], K]=(1 + \[Epsilon]/2 K)/(1 - \[Epsilon]/2 K) approximates MatrixExponential[\[Epsilon]X]";
+GOapproxExp::usage="approxExp[\[Epsilon],K]=(1 + \[Epsilon]/2 K)/(1 - \[Epsilon]/2 K) approximates MatrixExponential[\[Epsilon]X]";
+GOlogfunction::usage="logfunction[x] takes value 0 when x=0 and log[x] otherwise";
+GOConditionalLog::usage="GOConditionalLog[x] calculates MatrixLog[x] by applying logfunction to the eigenvalues of x";
+GOinvMSp::usage="invMSp[m,'Mform'] inverts a symplectic matrix m in the basis Mform as \!\(\*SuperscriptBox[\(m\), \(-1\)]\)=-\[CapitalOmega]m\[CapitalOmega]";
 
 
-GOlogfunction::usage="logfunction[ x] takes value 0 when x=0 and log[x] otherwise";
+(* Lie algebra bases *)
+GOSpBasis::usage="SpBasis[N] generates Sp(2N,R) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
+GOSpBasisNoUN::usage="spBasisNoUN[N] generates Sp(2N,R)/U(N) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
+GOSpBasisNoU1::usage="spBasisNoU1[N] generates Sp(2N,R)/U(1\!\(\*SuperscriptBox[\()\), \(N\)]\) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
+GOOBasis::usage="OBasis[N] generates O(2N,R) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
 
 
-GOConditionalLog::usage="GOConditionalLog[ x] calculates MatrixLog[ x] by applying logfunction to the eigenvalues of x";
-
-
-GOinvMSp::usage="invMSp[ m] inverts a symplectic matrix m as \!\(\*SuperscriptBox[\(m\), \(-1\)]\)=-\[CapitalOmega]m\[CapitalOmega]";
+(* Purifications and the standard form *)
+GOExtractStdFormG::usage="{rlist,Tra}=GOExtractStdFormG[G]
+Returns the parameters for constructing the standard form of G (list of the \!\(\*SubscriptBox[\(r\), \(i\)]\) and the transformation matrix Tra that puts G into standard form";
+GOPurifyStandardGBoson::usage="\!\(\*SubscriptBox[\(G\), \(sta\)]\)=GOPurifyStandardGBoson[rlist,N,'Gform']
+Constructs the bosonic purified state convariance matrix in the basis Gform with N degrees of freedom in the ancillary";
+GOPurifyStandardJBoson::usage="\!\(\*SubscriptBox[\(J\), \(sta\)]\)=GOPurifyStandardJBoson[rlist,N,'Jform']
+Constructs the bosonic purified state complex structure in the basis Jform with N degrees of freedom in the ancillary";
+GOPurifyStandard\[CapitalOmega]Fermion::usage="\!\(\*SubscriptBox[\(\[CapitalOmega]\), \(sta\)]\)=GOPurifyStandard\[CapitalOmega]Fermion[rlist,N,'\[CapitalOmega]form']
+Constructs the fermionic purified state convariance matrix in the basis \[CapitalOmega]form with N degrees of freedom in the ancillary";
+GOPurifyStandardJFermion::usage="\!\(\*SubscriptBox[\(J\), \(sta\)]\)=GOPurifyStandardJFermion[rlist,N,'Jform']
+Constructs the fermionic purified state complex structure in the basis Jform with N degrees of freedom in the ancillary";
 
 
 (* Application: Entanglement of purification *)
-GORestrictionAA::usage="GORestrictionAA[ {dimA1, dimB1, dimA2, dimB2}] generates the restriction function for use in calculating EoP for a system decomposed into degrees of freedom {dimA1, dimB1, dimA2, dimB2}";
-
-
-GOEoPBos::usage="GOEoPBos[ Restriction] generates a function f[ M, \!\(\*SubscriptBox[\(J\), \(0\)]\)] which calculates the bosonic EoP for the given restriction";
-
-
-GOEoPFerm::usage="GOEoPBos[ Restriction] generates a function f[ M, \!\(\*SubscriptBox[\(J\), \(0\)]\)] which calculates the fermionic EoP for the given restriction";
-
-
-GOEoPgradBos::usage="GOEoPgradBos[ Restriction] generates a function df[ M, \!\(\*SubscriptBox[\(J\), \(0\)]\), K] which calculates the gradient of the bosonic EoP for the given restriction with respect to the Lie algebra basis K";
-
-
-GOEoPgradFerm::usage="GOEoPgradFerm[ Restriction] generates a function df[ M, \!\(\*SubscriptBox[\(J\), \(0\)]\), K] which calculates the gradient of the fermionic EoP for the given restriction with respect to the Lie algebra basis K";
-
-
+GORestrictionAA::usage="GORestrictionAA[{dimA1, dimB1, dimA2, dimB2}] generates the restriction function for use in calculating EoP for a system decomposed into degrees of freedom {dimA1, dimB1, dimA2, dimB2}";
+GOEoPBos::usage="GOEoPBos[Restriction] generates a function f[M,\!\(\*SubscriptBox[\(J\), \(0\)]\)] which calculates the bosonic EoP for the given restriction";
+GOEoPFerm::usage="GOEoPBos[Restriction] generates a function f[M,\!\(\*SubscriptBox[\(J\), \(0\)]\)] which calculates the fermionic EoP for the given restriction";
+GOEoPgradBos::usage="GOEoPgradBos[Restriction] generates a function df[M,\!\(\*SubscriptBox[\(J\), \(0\)]\),K] which calculates the gradient of the bosonic EoP for the given restriction with respect to the Lie algebra basis K";
+GOEoPgradFerm::usage="GOEoPgradFerm[Restriction] generates a function df[M,\!\(\*SubscriptBox[\(J\), \(0\)]\),K] which calculates the gradient of the fermionic EoP for the given restriction with respect to the Lie algebra basis K";
 (* Application: Complexity of purification *)
-GOCoPBos::usage="GOCoPBos[ \!\(\*SubscriptBox[\(J\), \(T\)]\)] generates a function f[ M, \!\(\*SubscriptBox[\(J\), \(R0\)]\)] which calculates the bosonic CoP with respect to the given target state \!\(\*SubscriptBox[\(J\), \(T\)]\)";
-
-
-GOCoPgradBos::usage="GOCoPBos[ \!\(\*SubscriptBox[\(J\), \(T\)]\)] generates a function df[ M, \!\(\*SubscriptBox[\(J\), \(R0\)]\), K] which calculates the gradient of the bosonic CoP with respect to the given target state \!\(\*SubscriptBox[\(J\), \(T\)]\) and the Lie algebra basis K";
-
-
-GOenergyBos::usage="GOenergyBos[ h] generates an energy function f[ M, \!\(\*SubscriptBox[\(J\), \(0\)]\)] for a bosonic quadratic Hamiltonian H=\!\(\*SubscriptBox[\(h\), \(ab\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(a\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(b\)]\)";
-
-
-GOenergygradBos::usage="GOenergygradBos[ h] generates an energy gradient function df[ M, \!\(\*SubscriptBox[\(J\), \(0\)]\), K] for a bosonic quadratic Hamiltonian H=\!\(\*SubscriptBox[\(h\), \(ab\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(a\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(b\)]\) with respect to the Lie algebra basis K";
-
-
-GOenergyFerm::usage="GOenergyFerm[ h] generates an energy function f[ M, \!\(\*SubscriptBox[\(J\), \(0\)]\)] for a fermionic quadratic Hamiltonian H=\!\(\*SubscriptBox[\(h\), \(ab\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(a\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(b\)]\)";
-
-
-GOenergygradFerm::usage="GOenergygradBos[ h] generates an energy gradient function df[ M, \!\(\*SubscriptBox[\(J\), \(0\)]\), K] for a fermionic quadratic Hamiltonian H=\!\(\*SubscriptBox[\(h\), \(ab\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(a\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(b\)]\) with respect to the Lie algebra basis K";
+GOCoPBos::usage="GOCoPBos[\!\(\*SubscriptBox[\(J\),\(T\)]\)] generates a function f[M,\!\(\*SubscriptBox[\(J\), \(R0\)]\)] which calculates the bosonic CoP with respect to the given target state \!\(\*SubscriptBox[\(J\), \(T\)]\)";
+GOCoPgradBos::usage="GOCoPBos[\!\(\*SubscriptBox[\(J\), \(T\)]\)] generates a function df[M,\!\(\*SubscriptBox[\(J\), \(R0\)]\),K] which calculates the gradient of the bosonic CoP with respect to the given target state \!\(\*SubscriptBox[\(J\), \(T\)]\) and the Lie algebra basis K";
+(* Appliation: Energy of quadratic Hamiltonians *)
+GOenergyBos::usage="GOenergyBos[h] generates an energy function f[M,\!\(\*SubscriptBox[\(J\), \(0\)]\)] for a bosonic quadratic Hamiltonian H=\!\(\*SubscriptBox[\(h\), \(ab\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(a\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(b\)]\)";
+GOenergygradBos::usage="GOenergygradBos[h] generates an energy gradient function df[M,\!\(\*SubscriptBox[\(J\), \(0\)]\),K] for a bosonic quadratic Hamiltonian H=\!\(\*SubscriptBox[\(h\), \(ab\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(a\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(b\)]\) with respect to the Lie algebra basis K";
+GOenergyFerm::usage="GOenergyFerm[h] generates an energy function f[M,\!\(\*SubscriptBox[\(J\), \(0\)]\)] for a fermionic quadratic Hamiltonian H=\!\(\*SubscriptBox[\(h\), \(ab\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(a\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(b\)]\)";
+GOenergygradFerm::usage="GOenergygradBos[h] generates an energy gradient function df[M,\!\(\*SubscriptBox[\(J\), \(0\)]\),K] for a fermionic quadratic Hamiltonian H=\!\(\*SubscriptBox[\(h\), \(ab\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(a\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(b\)]\) with respect to the Lie algebra basis K";
 
 
 Begin["Private`"];
 
-(* -----------------------------------------------------------Fundamental definitions and basic tools--------------------------------------------------------------- *)
-(* Symplectic forms *)
-GO\[CapitalOmega]qqpp[n_]:=SparseArray[ArrayFlatten[{{0,IdentityMatrix[n]},{-IdentityMatrix[n],0}}]]; 
+
+(* Symplectic forms / Covariance matrices *)
+GO\[CapitalOmega]qqpp[n_]:=ArrayFlatten[{{0,IdentityMatrix[n]},{-IdentityMatrix[n],0}}]//SparseArray; 
 GO\[CapitalOmega]qpqp[n_]:=ArrayFlatten[DiagonalMatrix[ConstantArray[a,n]]/.a -> ({{0, 1},{-1, 0}})]//SparseArray ;
+GO\[CapitalOmega]aabb[n_]:=ArrayFlatten[{{0,-I IdentityMatrix[n]},{I IdentityMatrix[n],0}}]//SparseArray; 
+GO\[CapitalOmega]abab[n_]:=ArrayFlatten[DiagonalMatrix[ConstantArray[a,n]]/.a -> ({{0, -I},{I, 0}})]//SparseArray ;
 
-(* Complex structure *)
-GOTransformtoJ[G_]:=Module[{n,\[CapitalOmega]}, 
-	n=Length[G]/2; \[CapitalOmega]=GO\[CapitalOmega]qpqp[n]; 
-Return[-G.\[CapitalOmega]]];
+GOGqqpp[n_]:=IdentityMatrix[2n]//SparseArray;
+GOGqpqp[n_]:=IdentityMatrix[2n]//SparseArray;
+GOGaabb[n_]:=ArrayFlatten[{{0,IdentityMatrix[n]},{IdentityMatrix[n],0}}]//SparseArray ;
+GOGabab[n_]:=ArrayFlatten[DiagonalMatrix[ConstantArray[a,n]]/.a -> ({{0, 1},{1, 0}})]//SparseArray ;
 
-(* Basis transformation *)
-GOTransform[n_]:=SparseArray[Join[Table[{k,2k-1}->1,{k,n}],Table[{n+k,2k}->1,{k,n}]]];
+
+(* Basis Transformation matrices *)
+(* Re-ordering *)
+GOqqppFROMqpqp[n_]:=SparseArray[Join[Table[{k,2k-1}->1,{k,n}],Table[{n+k,2k}->1,{k,n}]]];
+GOqpqpFROMqqpp[n_]:=SparseArray[Join[Table[{2k-1,k}->1,{k,n}],Table[{2k,n+k}->1,{k,n}]]];
+GOaabbFROMabab[n_]:=SparseArray[Join[Table[{k,2k-1}->1,{k,n}],Table[{n+k,2k}->1,{k,n}]]];
+GOababFROMaabb[n_]:=SparseArray[Join[Table[{2k-1,k}->1,{k,n}],Table[{2k,n+k}->1,{k,n}]]];
+(* q to a *)
+GOababFROMqpqp[n_]:=ArrayFlatten[DiagonalMatrix[ConstantArray[a,n]]/.a -> (1/Sqrt[2]{{1, I},{1, -I}})]//SparseArray ;
+GOaabbFROMqpqp[n_]:=GOqqppFROMqpqp[n].GOababFROMqpqp[n]//SparseArray ;
+GOababFROMqqpp[n_]:=GOababFROMqpqp[n].GOqpqpFROMqqpp[n]//SparseArray ;
+GOaabbFROMqqpp[n_]:=GOaabbFROMabab[n].GOababFROMqqpp[n]//SparseArray ;
+(* a to q *)
+GOqpqpFROMabab[n_]:=ArrayFlatten[DiagonalMatrix[ConstantArray[a,n]]/.a -> (1/Sqrt[2]{{1, 1},{-I, I}})]//SparseArray ;
+GOqqppFROMabab[n_]:=GOqqppFROMqpqp[n].GOqpqpFROMabab[n]//SparseArray ;
+GOqpqpFROMaabb[n_]:=GOqpqpFROMabab[n].GOababFROMaabb[n]//SparseArray ;
+GOqqppFROMaabb[n_]:=GOqqppFROMabab[n].GOababFROMaabb[n]//SparseArray ;
+
+
+(* J from G and \[CapitalOmega] *)
+GOTransformGtoJ[G_,Gform_,Jform_]:=Module[{n,Mtra,Gcorrect,\[CapitalOmega]correct},
+	n=Length[G]/2;
+	Mtra=If[Gform==Jform,IdentityMatrix[2n],ToExpression["GO"<>Jform<>"FROM"<>Gform][n]];
+	Gcorrect=Mtra.G.Transpose[Mtra];
+	\[CapitalOmega]correct=ToExpression["GO\[CapitalOmega]"<>Jform][n];
+	-Gcorrect.\[CapitalOmega]correct];
+GOTransform\[CapitalOmega]toJ[\[CapitalOmega]_,\[CapitalOmega]form_,Jform_]:=Module[{n,Mtra,Gcorrect,\[CapitalOmega]correct},
+	n=Length[\[CapitalOmega]]/2;
+	Mtra=If[\[CapitalOmega]form==Jform,IdentityMatrix[2n],ToExpression["GO"<>Jform<>"FROM"<>\[CapitalOmega]form][n]];
+	\[CapitalOmega]correct=Mtra.\[CapitalOmega].Transpose[Mtra];
+	Gcorrect=ToExpression["GOG"<>Jform][n];
+	-Gcorrect.\[CapitalOmega]correct];
+GOTransformJtoG[J_,Jform_,Gform_]:=Module[{n,Mtra,Jcorrect,\[CapitalOmega]correct},
+	n=Length[J]/2;
+	Mtra=If[Gform==Jform,IdentityMatrix[2n],ToExpression["GO"<>Gform<>"FROM"<>Jform][n]];
+	Jcorrect=Mtra.J.Transpose[Mtra];
+	\[CapitalOmega]correct=ToExpression["GO\[CapitalOmega]"<>Gform][n];
+	Jcorrect.\[CapitalOmega]correct];
+GOTransformJto\[CapitalOmega][J_,Jform_,\[CapitalOmega]form_]:=Module[{n,Mtra,Jcorrect,Gcorrect},
+	n=Length[J]/2;
+	Mtra=If[\[CapitalOmega]form==Jform,IdentityMatrix[2n],ToExpression["GO"<>\[CapitalOmega]form<>"FROM"<>Jform][n]];
+	Jcorrect=Mtra.J.Transpose[Mtra];
+	Gcorrect=ToExpression["GOG"<>\[CapitalOmega]form][n];
+	Jcorrect.Gcorrect];
+
+
+(* Random matrices *)
+GOMranSp[n_,Mform_]:=Module[{m1,m2,m3},
+	m1=RandomReal[{0,1},{n,n}];
+	m2=m1+Transpose[m1];
+	m3=ToExpression["GO\[CapitalOmega]"<>Mform][n/2].m2;
+	MatrixExp[m3]];
+GOMranO[n_,Mform_]:=Module[{m},
+	m=RandomReal[{-1,1},{n,n}];
+	Orthogonalize[m]];
+
+
+(* Matrix exp approximation *)
+GOapproxExp[t_,x_]:=Module[{dim,id},
+	dim=Dimensions[x][[1]];id=IdentityMatrix[dim];
+	Return[(id+t/2 x).Inverse[(id-t/2 x)]]];
+	
+(* Conditional logarithm *)
+GOlogfunction[x_]:=If[x==0,0,Log[x]]
+GOConditionalLog[x_]:=Module[{Diag,Tra,Mat},
+	Diag=DiagonalMatrix[GOlogfunction/@Eigenvalues[x]];
+	Tra=Eigenvectors[x]//Transpose//Chop;
+	Mat=Tra.Diag.Inverse[Tra]//Chop];
+
+(* Inverting a symplectic matrix *)
+GOinvMSp[m_,Mform_]:=Module[{\[CapitalOmega]}, \[CapitalOmega]=ToExpression["GO\[CapitalOmega]"<>Mform][Length[m]/2]; Return[-\[CapitalOmega].Transpose[m].\[CapitalOmega]]];
+
 
 (* Lie algebra bases *)
 GOSpBasis[n_]:=Module[{SYM,ASYM,notK,Tr,Trtran},
@@ -223,8 +195,8 @@ GOSpBasis[n_]:=Module[{SYM,ASYM,notK,Tr,Trtran},
 		Table[ArrayFlatten[{{m,0},{0,m}}],{m,ASYM}],
 		Table[ArrayFlatten[{{0,m},{m,0}}],{m,SYM}],
 		Table[ArrayFlatten[{{0,m},{-m,0}}],{m,SYM}]];
-	Tr=GOTransform[n];Trtran=Transpose[Tr];
-Return[Table[Trtran.Ki.Tr,{Ki,notK}]]]
+	Tr=GOqpqpFROMqqpp[n];
+Return[Table[Tr.Ki.Transpose[Tr],{Ki,notK}]]]
 
 GOSpBasisNoUN[N_]:=Module[{Kold},
 	Kold=GOSpBasis[N];
@@ -238,38 +210,11 @@ Return[DeleteCases[Kold,Alternatives@@notK2]]];
 
 GOOBasis[n_]:=Module[{notK,Tr,Trtran},
 	notK=Flatten[Table[SparseArray[{{i,j}->1,{j,i}->-1},{2n,2n}],{i,1,2n},{j,i+1,2n}],1];
-	Tr=GOTransform[n];Trtran=Transpose[Tr];
-Return[Table[Trtran.Ki.Tr,{Ki,notK}]]];
-
-(* Matrix exp approximation *)
-GOapproxExp[t_,x_]:=Module[{dim,id},
-	dim=Dimensions[x][[1]];id=IdentityMatrix[dim];
-Return[(id+t/2 x).Inverse[(id-t/2 x)]]];
-
-(* Generate random Lie group elements *)
-GOMranSp[n_]:=Module[{m1,m2,m3},
-	m1=RandomReal[{0,1},{n,n}];
-	m2=m1+Transpose[m1];
-	m3=GO\[CapitalOmega]qpqp[n/2].m2;
-Return[MatrixExp[m3]]];
-
-GOMranO[n_]:=Module[{m},
-	m=RandomReal[{-1,1},{n,n}];
-Return[Orthogonalize[m]]];
-
-(* Conditional logarithm *)
-GOlogfunction[x_]:=If[x==0,0,Log[x]]
-
-GOConditionalLog[x_]:=Module[{Diag,Tra,Mat},
-	Diag=DiagonalMatrix[GOlogfunction/@Eigenvalues[x]];
-	Tra=Eigenvectors[x]//Transpose//Chop;
-	Mat=Tra.Diag.Inverse[Tra]//Chop];
-
-(* Inverting a symplectic matrix *)
-GOinvMSp[m_]:=Module[{\[CapitalOmega]}, \[CapitalOmega]=GO\[CapitalOmega]qpqp[Length[m]/2]; Return[-\[CapitalOmega].Transpose[m].\[CapitalOmega]]];
+	Tr=GOqpqpFROMqqpp[n];
+Return[Table[Tr.Ki.Transpose[Tr],{Ki,notK}]]];
 
 
-(* --------------------------------------------------------------------Optimization algorithm----------------------------------------------------------------------- *)
+(* --------------------------------------------------------------------Optimization algorithm-------------------------------------------------------------------------------- *)
 
 GOOptimize[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_, dimB_}, tol_, steplimit_:\[Infinity]]:=
 
@@ -380,7 +325,8 @@ GOOptimize[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_, dimB_
 
 (* --------------------------------------------------------------------Purifications and the standard form-------------------------------------------------------------------- *)
 
-GOExtractStdForm[G_]:=Module[{NT=Dimensions[G][[1]]/2,\[CapitalOmega]T,J,RI,SWT,tra,resc,Tra,GAB,ON,TRA,check,checklist,DiagElems,Diag,Mtra,rlist}, 
+(* Extracting the parameters for the standard form *)
+GOExtractStdFormG[G_]:=Module[{NT=Dimensions[G][[1]]/2,\[CapitalOmega]T,J,RI,SWT,tra,resc,Tra,GAB,ON,TRA,check,checklist,DiagElems,Diag,Mtra,rlist}, 
 	\[CapitalOmega]T=GO\[CapitalOmega]qpqp[NT]; J=-G.\[CapitalOmega]T;
 
 	RI=SparseArray[{{x_,x_}->-I Abs[Re[I^x]]+ Abs[Re[I^(x+1)]],{x_,y_}/;y-x==1->Abs[Re[I^y]],{x_,y_}/;x-y==1->I Abs[Re[I^x]]},{2NT,2NT}];
@@ -399,26 +345,30 @@ GOExtractStdForm[G_]:=Module[{NT=Dimensions[G][[1]]/2,\[CapitalOmega]T,J,RI,SWT,
 	Mtra=Diag.TRA;
 
 	rlist=Diagonal[1/2 ArcCosh[((TRA.G.Transpose[TRA])//Chop)]][[1;;-1;;2]];
-Return[{rlist,Mtra}]];
-
-(* Purified state for bosons *)
-GOConstructPurificationBos[rlist_,{n_,m_}]:=Module[{cosh,sinh,diag,Q14,Q23,Q5,G0,\[CapitalOmega]0,J0},
+	Return[{rlist,Mtra}]];
+GOPurifyStandardGBoson[rlist_,dimp_,Gform_]:=Module[{cosh,sinh,diag,Q14,Q23,Q5,G0,\[CapitalOmega]0,J0,n,m,Mtra},
 	cosh=Flatten[Table[{Cosh[2 rr],Cosh[2 rr]},{rr,rlist}]];
 	sinh=Flatten[Table[{Sinh[2 rr],-Sinh[2 rr]},{rr,rlist}]];
-
+	
+	n=Length[rlist]; m=dimp;
+	
 	Q14=DiagonalMatrix[Hold/@cosh]//ReleaseHold//ArrayFlatten//SparseArray;
 	Q23=DiagonalMatrix[Hold/@sinh]//ReleaseHold//ArrayFlatten//SparseArray;
 	Q5=If[m==n,Null,IdentityMatrix[2(m-n)]//SparseArray];
 
 	If[m==n, G0=ArrayFlatten[{{Q14,Q23},{Q23,Q14}}]//SparseArray, G0=ArrayFlatten[{{Q14,Q23,0},{Q23,Q14,0},{0,0,Q5}}]//SparseArray];
-
-	\[CapitalOmega]0=GO\[CapitalOmega]qpqp[m+n];
-Return[-G0.\[CapitalOmega]0]];
-
-(* Purified state for fermions *)
-GOConstructPurificationFerm[rlist_,{n_,m_}]:=Module[{cos,sin,Q14,Q23,Q5,G0,\[CapitalOmega]0,J0},
+	
+	Mtra=If[Gform=="qpqp",IdentityMatrix[4n],ToExpression["GO"<>Gform<>"FROMqpqp"][n]];
+	SparseArray[Mtra.G0.Transpose[Mtra]]];
+GOPurifyStandardJBoson[rlist_,dimp_,Gform_]:=Module[{n,G,\[CapitalOmega]},
+	G=GOPurifyStandardGBoson[rlist,dimp,Gform];
+	\[CapitalOmega]=ToExpression["GO\[CapitalOmega]"<>Gform][Length[G]/2];
+	SparseArray[-G.\[CapitalOmega]]];
+GOPurifyStandard\[CapitalOmega]Fermion[rlist_,dimp_,\[CapitalOmega]form_]:=Module[{n,m,cos,sin,Q14,Q23,Q5,G0,\[CapitalOmega]0,J0,Mtra},
 	cos=Table[ArrayFlatten[{{0,Cos[2 rr]},{-Cos[2 rr],0}}],{rr,rlist}];
 	sin=Table[ArrayFlatten[{{0,Sin[2 rr]},{Sin[2 rr],0}}],{rr,rlist}];
+	
+	n=Length[rlist]; m=dimp;
 
 	Q14=DiagonalMatrix[Hold/@cos]//ReleaseHold//ArrayFlatten//SparseArray;
 	Q23=DiagonalMatrix[Hold/@sin]//ReleaseHold//ArrayFlatten//SparseArray;
@@ -427,11 +377,15 @@ GOConstructPurificationFerm[rlist_,{n_,m_}]:=Module[{cos,sin,Q14,Q23,Q5,G0,\[Cap
 	If[m==n, G0=ArrayFlatten[{{Q14,Q23},{-Q23,Q14}}]//SparseArray, 
 	G0=ArrayFlatten[{{Q14,Q23,0},{-Q23,Q14,0},{0,0,Q5}}]//SparseArray];
 	
-	\[CapitalOmega]0=GO\[CapitalOmega]qpqp[m+n];
-Return[-G0.\[CapitalOmega]0]];
+	Mtra=If[\[CapitalOmega]form=="qpqp",IdentityMatrix[2n],ToExpression["GO"<>\[CapitalOmega]form<>"FROMqpqp"][n]];
+	SparseArray[Mtra.G0.Transpose[Mtra]]];
+GOPurifyStandardJFermion[rlist_,dimp_,Gform_]:=Module[{n,G,\[CapitalOmega]},
+	\[CapitalOmega]=GOPurifyStandard\[CapitalOmega]Fermion[rlist,dimp,Gform];
+	G=ToExpression["GOG"<>Gform][Length[\[CapitalOmega]]/2];
+	SparseArray[-G.\[CapitalOmega]]];
 
 
-(* --------------------------------------------------------------------------Applications-------------------------------------------------------------------------- *)
+(* --------------------------------------------------------------------------Applications------------------------------------------------------------------------------------ *)
 
 (* --------------- Entanglement of Purification ---------------- *)
 (* Function to generate restriction - for use in EoP *)
