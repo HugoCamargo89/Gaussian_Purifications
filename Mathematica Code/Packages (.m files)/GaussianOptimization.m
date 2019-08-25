@@ -183,7 +183,7 @@ GOConditionalLog[x_]:=Module[{Diag,Tra,Mat},
 	Mat=Tra.Diag.Inverse[Tra]//Chop];
 
 (* Inverting a symplectic matrix *)
-GOinvMSp[m_,Mform_]:=Module[{\[CapitalOmega]}, \[CapitalOmega]=ToExpression["GO\[CapitalOmega]"<>Mform][Length[m]/2]; Return[-\[CapitalOmega].Transpose[m].\[CapitalOmega]]];
+GOinvMSp[m_,Mform_:"qpqp"]:=Module[{\[CapitalOmega]}, \[CapitalOmega]=ToExpression["GO\[CapitalOmega]"<>Mform][Length[m]/2]; Return[-\[CapitalOmega].Transpose[m].\[CapitalOmega]]];
 
 
 (* Lie algebra bases *)
