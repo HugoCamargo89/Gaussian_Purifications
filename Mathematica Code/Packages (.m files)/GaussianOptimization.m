@@ -15,15 +15,15 @@ a lower bound on the gradient norm (tolerance), a limit on the number of iterati
 
 
 (* Symplectic forms / Covariance matrices *)
-GO\[CapitalOmega]qqpp::usage="GO\[CapitalOmega]qqpp[N] generates \[CapitalOmega] in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),...,\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...) for N deg. of freedom"
-GO\[CapitalOmega]qpqp::usage="GO\[CapitalOmega]qpqp[N] generates \[CapitalOmega] in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...) for N deg. of freedom"
-GO\[CapitalOmega]aabb::usage="GO\[CapitalOmega]aabb[N] generates \[CapitalOmega] in basis (\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),...,\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...) for N deg. of freedom"
-GO\[CapitalOmega]abab::usage="GO\[CapitalOmega]abab[N] generates \[CapitalOmega] in basis (\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...) for N deg. of freedom"
+GO\[CapitalOmega]qqpp::usage="GO\[CapitalOmega]qqpp[N] generates \[CapitalOmega] in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),...,\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...) for N deg. of freedom";
+GO\[CapitalOmega]qpqp::usage="GO\[CapitalOmega]qpqp[N] generates \[CapitalOmega] in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...) for N deg. of freedom";
+GO\[CapitalOmega]aabb::usage="GO\[CapitalOmega]aabb[N] generates \[CapitalOmega] in basis (\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),...,\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...) for N deg. of freedom";
+GO\[CapitalOmega]abab::usage="GO\[CapitalOmega]abab[N] generates \[CapitalOmega] in basis (\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...) for N deg. of freedom";
 
-GOGqqpp::usage="GOGqqpp[N] generates G in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),...,\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...) for N deg. of freedom"
-GOGqpqp::usage="GOGqpqp[N] generates G in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...) for N deg. of freedom"
-GOGaabb::usage="GOGaabb[N] generates G in basis (\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),...,\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...) for N deg. of freedom"
-GOGabab::usage="GOGabab[N] generates G in basis (\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...) for N deg. of freedom"
+GOGqqpp::usage="GOGqqpp[N] generates G in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),...,\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...) for N deg. of freedom";
+GOGqpqp::usage="GOGqpqp[N] generates G in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...) for N deg. of freedom";
+GOGaabb::usage="GOGaabb[N] generates G in basis (\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),...,\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...) for N deg. of freedom";
+GOGabab::usage="GOGabab[N] generates G in basis (\!\(\*SubscriptBox[\(a\), \(1\)]\),\!\(\*SubscriptBox[\(b\), \(1\)]\),\!\(\*SubscriptBox[\(a\), \(2\)]\),\!\(\*SubscriptBox[\(b\), \(2\)]\),...) for N deg. of freedom";
 
 
 (* Basis Transformation matrices *)
@@ -68,6 +68,11 @@ GOSpBasis::usage="SpBasis[N] generates Sp(2N,R) Lie algebra basis in basis (\!\(
 GOSpBasisNoUN::usage="spBasisNoUN[N] generates Sp(2N,R)/U(N) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
 GOSpBasisNoU1::usage="spBasisNoU1[N] generates Sp(2N,R)/U(1\!\(\*SuperscriptBox[\()\), \(N\)]\) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
 GOOBasis::usage="OBasis[N] generates O(2N,R) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
+
+
+GOBasisGeneration::usage="GOBasisGeneration[{'basisA','basisB'},{dimA,dimB}] generates a compound Lie algebra basis with basis 'basisA' in subsystem A with dimA degrees of freedom and equivalently for subsystem B, in the basis qpqp";
+GOnewMGeneration::usage="GOnewMGeneration[{'basisA','basisB'},{dimA,dimB}] generates a function newM[\!\(\*SubscriptBox[\(M\), \(old\)]\),\[Epsilon],K] which defines a step of size \[Epsilon] from \!\(\*SubscriptBox[\(M\), \(old\)]\) in direction X for the basis GOBasisGeneration[{'basisA','basisB'},{dimA,dimB}]";
+GOSystemDimensions::usage"GOSystemDimensions[{'basisA','basisB'},{dimA,dimB}] returns {GOBasisGeneration,GOnewMGeneration} for the given parameters";
 
 
 (* Purifications and the standard form *)
@@ -213,52 +218,72 @@ GOOBasis[n_]:=Module[{notK,Tr,Trtran},
 	Tr=GOqpqpFROMqqpp[n];
 Return[Table[Tr.Ki.Transpose[Tr],{Ki,notK}]]];
 
+(* Generating compound basis *)
+GOBasisGeneration[{basisA_, basisB_}, {dimA_, dimB_}]:=Module[{dim,KA,KB,K},
+	dim=2(dimA+dimB);
+			
+	(* Generate Lie algebra basis *)
+	KA=ToExpression[basisA][dimA]; KB=ToExpression[basisB][dimB];
+	K=Which[
+		(* Case 1: Only B is varied *)
+		basisA=="None", Table[PadLeft[Ki,{dim,dim}],{Ki,KB}],
+			
+		(* Case 2: Only A is varied *)
+		basisB=="None", Table[PadRight[Ki,{dim,dim}],{Ki,KA}],
+			
+		(* Case 3: Both A and B are varied *)
+		True, Table[ArrayFlatten[{{KAi,0},{0,KBi}}],{KAi,KA},{KBi,KB}]
+		];
+		
+	K=If[dimB==0, KA, K];
+	Return[K]];
+
+(* Defining new transformations *)
+GOnewMGeneration[{basisA_, basisB_}, {dimA_, dimB_}]:=Which[
+		(* Case 1: Only B is varied *)
+		basisA=="None", Function[{m,s,x},Module[{dim,XX},
+		dim=2(dimA+dimB);
+		XX=x[[2dimA+1;;dim,2dimA+1;;dim]]; m.ArrayFlatten[{{IdentityMatrix[2dimA],0},{0,GOapproxExp[s,XX]}}]//SparseArray]],
+			
+		(* Case 2: Only A is varied *)
+		basisB=="None", Function[{m,s,x},Module[{XX},
+		XX=x[[1;;2dimA,1;;2dimA]]; m.ArrayFlatten[{{GOapproxExp[s,XX],0},{0,IdentityMatrix[2dimB]}}]//SparseArray]],
+			
+		(* Case 3: Both A and B are varied *)
+		True, Function[{m,s,x},m.GOapproxExp[s,x]]];
+
+(* Setting dimensional parameters for the optimisation *)
+GOSystemDimensions[{basisA_, basisB_}, {dimA_, dimB_}]:=Module[{K,newM},
+	K=GOBasisGeneration[{basisA, basisB}, {dimA, dimB}];
+	newM=GOnewMGeneration[{basisA, basisB}, {dimA, dimB}];
+	Return[{K,newM}]];
+
 
 (* --------------------------------------------------------------------Optimization algorithm-------------------------------------------------------------------------------- *)
 
-GOOptimize[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_, dimB_}, tol_, steplimit_:\[Infinity]]:=
+GOOptimize[
+
+(* Problem-specific input arguments *)
+{function_, gradfunction_}, 
+
+(* System-specific input arguments *)
+{J0_, M0_, K_, newM_},
+
+(* Process-specific input arguments *)
+{gradtol_, Etol_, steplimit_:\[Infinity], stepcorrection_}]:=
 
 	Module[{G0, invG0, (* Initial covariance matrix *)
-			KA, KB, K, (* Lie algebra basis *)
 			Mold, Mnew, Eold, Enew,(* Updating function values *)
-			grad, Normgrad, X, \[Epsilon], newM, GenerateM, invmetric, metric, (* Movement *)
+			grad, Normgrad, X, \[Epsilon], GenerateM, invmetric, metric, (* Movement *)
 			M0list, Elist, Normlist, diffE, diffNorm, (* Tracking values *)
-			stepcount, dimM0, CorrList, order1, order2, order, keepnumber, loosenumber, donelist, (* Tracking trajectories *) 
+			stepcount, dimM0, CorrList, order1, order2, order, keepnumber, loosenumber, donelist, stopreason,(* Tracking trajectories *) 
 			FinalE, FinalM, FinalElist, FinalNormlist}, (* Results *)
 		
 		dimM0=Length[M0]; CorrList=List[]; M0list=M0; donelist=List[]; Elist=List[];
 		
-		(* Generate Lie algebra basis *)
-		KA=ToExpression[basisA][dimA]; KB=ToExpression[basisB][dimB];
-		K=Which[
-			(* Case 1: Only B is varied *)
-			basisA=="None", Table[PadLeft[Ki,{Length[J0],Length[J0]}],{Ki,KB}],
-			
-			(* Case 2: Only A is varied *)
-			basisB=="None", Table[PadRight[Ki,{Length[J0],Length[J0]}],{Ki,KA}],
-			
-			(* Case 3: Both A and B are varied *)
-			True, Table[ArrayFlatten[{{KAi,0},{0,KBi}}],{KAi,KA},{KBi,KB}]
-		];
-		
-		K=If[dimB==0, KA, K];
-		
-		(* Define new matrix generation *)
-		Which[
-			(* Case 1: Only B is varied *)
-			basisA=="None", newM[m_,s_,x_]:=Module[{XX},
-			XX=x[[2dimA+1;;Length[J0],2dimA+1;;Length[J0]]]; m.ArrayFlatten[{{IdentityMatrix[2dimA],0},{0,GOapproxExp[s,XX]}}]//SparseArray];
-			
-			(* Case 2: Only A is varied *)
-			basisB=="None", newM[m_,s_,x_]:=Module[{XX},
-			XX=x[[1;;2dimA,1;;2dimA]]; m.ArrayFlatten[{{GOapproxExp[s,XX],0},{0,IdentityMatrix[2dimB]}}]//SparseArray];
-			
-			(* Case 3: Both A and B are varied *)
-			True, newM[m_,s_,x_]:=m.GOapproxExp[s,x]];
-		
-		(* Sub-routine *)
+		(* Sub-rountine for step size *)
 		GenerateM[\[Epsilon]_,Mold_,Mnew_,Eold_,Enew_,X_]:=Module[{s=\[Epsilon], enew=Enew, corr=0, mnew=Mnew},
-			While[enew>Eold, s=s/2; corr++; mnew=newM[Mold,s,X]; enew=function[mnew,J0];]; AppendTo[CorrList,corr]; Return[{mnew//SparseArray,enew}]];
+			While[enew>Eold, s=stepcorrection[s]; corr++; mnew=newM[Mold,s,X]; enew=function[mnew,J0];]; AppendTo[CorrList,corr]; Return[{mnew//SparseArray,enew}]];
 			
 		(* Define natural metric *)
 		G0=J0.GO\[CapitalOmega]qpqp[Length[J0]/2]; invG0=Inverse[G0];
@@ -278,7 +303,7 @@ GOOptimize[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_, dimB_
 		(* -----Main routine----- *)
 		
 		(* Stopping condition *)
-		While[AllTrue[Normgrad,#>tol&] && stepcount < steplimit && AllTrue[diffE,#>10^-10&],
+		While[AllTrue[Normgrad,#>gradtol&] && stepcount < steplimit && AllTrue[diffE,#>Etol&],
 		
 			(* Choose initial step size *)
 			\[Epsilon]=Normgrad/2;
@@ -311,12 +336,12 @@ GOOptimize[function_, gradfunction_, J0_, M0_, {basisA_, basisB_}, {dimA_, dimB_
 		];
 	
 	(* Check overall stopping criteria *)
-	If[#<tol,AppendTo[donelist,Position[Normgrad,#]]]&/@Normgrad;
-	If[stepcount >= steplimit,AppendTo[donelist,Position[Eold,Min[Eold]]];Print["Optimisation terminated by step limit."]];
-	If[#<10^-10,AppendTo[donelist,Position[diffE,#]]]&/@diffE;
+	If[#<gradtol,AppendTo[donelist,Position[Normgrad,#]];stopreason="Gradient norm tolerance reached"]&/@Normgrad; 
+	If[stepcount >= steplimit,AppendTo[donelist,Position[Eold,Min[Eold]]];stopreason="Iteration limit reached"];
+	If[#<Etol,AppendTo[donelist,Position[diffE,#]];stopreason="Function value tolerance reached"]&/@diffE;
 	
 	FinalE=Min[Eold[[donelist//Flatten]]]; FinalM=M0list[[donelist//Flatten]]; FinalElist=Elist[[donelist//Flatten]]//Flatten; FinalNormlist=Normlist[[donelist//Flatten]]//Flatten; 
-	
+	Print["Reason for termination: "<>stopreason];
 	(* --- Output --- *)
 
 	Return[{FinalE,FinalM,CorrList,FinalElist,FinalNormlist,metric}]
