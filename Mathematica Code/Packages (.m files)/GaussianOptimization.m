@@ -4,13 +4,11 @@ BeginPackage["GaussianOptimization`"];
 
 
 (* Optimization algorithm *)
-GOOptimize::usage="{ffinal,Mfinal,listStepSizeIterations,listfValues,listGradientNorms,metricG}=GOOptimize[f, df, Jinitial, listMinitial, {basisA, basisB}, {dimA, dimB}, tolerance, steplimit_:\[Infinity]]
+GOOptimize::usage="{ffinal,Mfinal,listStepSizeIterations,listfValues,listAllfvalues,listGradientNorms,metricG}=GOOptimize[ProblemSpecific, SystemSpecfific, ProcessSpecific]
 
-Optimization of a scalar function over the manifold of Gaussian states : 
-The algorithm initializes at the starting points in Minitial in the manifold, each of which defines a trajectory for the optimization. 
-At each multiple of 5 steps, the algorithm retains only the 20 % of the trajectories with the lowest function values and highest gradient 
-norm, respectively. The optimization is terminated when the final remaining trajectory (or trajectories) first satisfies one of three stopping criteria : 
-a lower bound on the gradient norm (tolerance), a limit on the number of iterations (steplimit), and a relative difference in function value below \!\(\*SuperscriptBox[\(10\), \(-10\)]\)
+ProblemSpecific={f,df} 
+SystemSpecific={\!\(\*SubscriptBox[\(J\), \(0\)]\),\!\(\*SubscriptBox[\(listM\), \(0\)]\),K,newMfunction} 
+ProcessSpecific={\!\(\*SubscriptBox[\(tol\), \(gradient\)]\),\!\(\*SubscriptBox[\(tol\), \(fvalues\)]\),steplimit,stepsizeroutine, track all trajectories?}
 ";
 
 
@@ -78,6 +76,9 @@ GOSystemDimensions::usage"GOSystemDimensions[{'basisA','basisB'},{dimA,dimB}] re
 (* Purifications and the standard form *)
 GOExtractStdFormG::usage="{rlist,Tra}=GOExtractStdFormG[G]
 Returns the parameters for constructing the standard form of G (list of the \!\(\*SubscriptBox[\(r\), \(i\)]\) and the transformation matrix Tra that puts G into standard form";
+GOExtractStdForm\[CapitalOmega]::usage="{rlist,Tra}=GOExtractStdForm\[CapitalOmega][\[CapitalOmega]]
+Returns the parameters for constructing the standard form of \[CapitalOmega] (list of the \!\(\*SubscriptBox[\(r\), \(i\)]\) and the transformation matrix Tra that puts \[CapitalOmega] into standard form";
+GOExtractStdForm\[CapitalOmega]::usage="egal";
 GOPurifyStandardGBoson::usage="\!\(\*SubscriptBox[\(G\), \(sta\)]\)=GOPurifyStandardGBoson[rlist,N,'Gform']
 Constructs the bosonic purified state convariance matrix in the basis Gform with N degrees of freedom in the ancillary";
 GOPurifyStandardJBoson::usage="\!\(\*SubscriptBox[\(J\), \(sta\)]\)=GOPurifyStandardJBoson[rlist,N,'Jform']
@@ -270,18 +271,18 @@ GOOptimize[
 {J0_, M0_, K_, newM_},
 
 (* Process-specific input arguments *)
-{gradtol_, Etol_, steplimit_:\[Infinity], stepcorrection_}]:=
+{gradtol_, Etol_, steplimit_:\[Infinity], stepcorrection_, trackall_:False}]:=
 
 	Module[{G0, invG0, (* Initial covariance matrix *)
 			Mold, Mnew, Eold, Enew,(* Updating function values *)
 			grad, Normgrad, X, \[Epsilon], GenerateM, invmetric, metric, (* Movement *)
 			M0list, Elist, Normlist, diffE, diffNorm, (* Tracking values *)
 			stepcount, dimM0, CorrList, order1, order2, order, keepnumber, loosenumber, donelist, stopreason,(* Tracking trajectories *) 
-			FinalE, FinalM, FinalElist, FinalNormlist}, (* Results *)
+			resultIndex, doneE, doneElist, doneM, doneNorm, FinalE, FinalM, FinalElist, FinalNormlist}, (* Results *)
 		
 		dimM0=Length[M0]; CorrList=List[]; M0list=M0; donelist=List[]; Elist=List[];
 		
-		(* Sub-rountine for step size *)
+		(* Sub-rountine for step size - this definition is always the same but depends on the stepcorrection function *)
 		GenerateM[\[Epsilon]_,Mold_,Mnew_,Eold_,Enew_,X_]:=Module[{s=\[Epsilon], enew=Enew, corr=0, mnew=Mnew},
 			While[enew>Eold, s=stepcorrection[s]; corr++; mnew=newM[Mold,s,X]; enew=function[mnew,J0];]; AppendTo[CorrList,corr]; Return[{mnew//SparseArray,enew}]];
 			
@@ -323,7 +324,7 @@ GOOptimize[
 		stepcount++;
 											
 		(* Checking trajectories *)
-		If[stepcount/5//IntegerQ && Length[M0list]>1,
+		If[stepcount/5//IntegerQ && Length[M0list]>1 && trackall==False,
 			
 			(* Retain most promising 20% *)
 			keepnumber=If[(.2 dimM0//Round)==0,1,.2 dimM0//Round]; 
@@ -340,11 +341,14 @@ GOOptimize[
 	If[stepcount >= steplimit,AppendTo[donelist,Position[Eold,Min[Eold]]];stopreason="Iteration limit reached"];
 	If[#<Etol,AppendTo[donelist,Position[diffE,#]];stopreason="Function value tolerance reached"]&/@diffE;
 	
-	FinalE=Min[Eold[[donelist//Flatten]]]; FinalM=M0list[[donelist//Flatten]]; FinalElist=Elist[[donelist//Flatten]]//Flatten; FinalNormlist=Normlist[[donelist//Flatten]]//Flatten; 
+	doneE=Eold[[donelist//Flatten]]; doneElist=Elist[[donelist//Flatten]]; doneM=M0list[[donelist//Flatten]]; doneNorm=Normlist[[donelist//Flatten]];
+	resultIndex=Position[doneE,Min[doneE]]//Flatten;
+	
+	FinalE=doneE[[resultIndex]]; FinalM=doneM[[resultIndex]]; FinalElist=doneElist[[resultIndex]]; FinalNormlist=doneNorm[[resultIndex]];
 	Print["Reason for termination: "<>stopreason];
 	(* --- Output --- *)
 
-	Return[{FinalE,FinalM,CorrList,FinalElist,FinalNormlist,metric}]
+	Return[{FinalE,FinalM,CorrList,FinalElist,Elist,FinalNormlist,metric}]
 ];
 
 
@@ -371,6 +375,17 @@ GOExtractStdFormG[G_]:=Module[{NT=Dimensions[G][[1]]/2,\[CapitalOmega]T,J,RI,SWT
 
 	rlist=Diagonal[1/2 ArcCosh[((TRA.G.Transpose[TRA])//Chop)]][[1;;-1;;2]];
 	Return[{rlist,Mtra}]];
+
+GOExtractStdForm\[CapitalOmega][\[CapitalOmega]_]:=Module[{tuples,selecttuples,values,vectors,g,invg,Mtra,rlist},
+	tuples=Eigensystem[\[CapitalOmega]]//Transpose;
+	selecttuples=Select[tuples,Im[#][[1]]>0&]//Chop;
+	{values,vectors}=selecttuples//Transpose;
+	g=vectors.ConjugateTranspose[vectors]//Chop;
+	invg=MatrixPower[Inverse[g],1/2];
+	Mtra=Table[{Sqrt[2]*Re[x],Sqrt[2]*Im[x]},{x,invg.vectors}]//Flatten[#,1]&;
+	rlist=1/2ArcCos[Im[#]]&/@values;
+	Return[{rlist,Mtra}]];
+
 GOPurifyStandardGBoson[rlist_,dimp_,Gform_]:=Module[{cosh,sinh,diag,Q14,Q23,Q5,G0,\[CapitalOmega]0,J0,n,m,Mtra},
 	cosh=Flatten[Table[{Cosh[2 rr],Cosh[2 rr]},{rr,rlist}]];
 	sinh=Flatten[Table[{Sinh[2 rr],-Sinh[2 rr]},{rr,rlist}]];
@@ -385,10 +400,12 @@ GOPurifyStandardGBoson[rlist_,dimp_,Gform_]:=Module[{cosh,sinh,diag,Q14,Q23,Q5,G
 	
 	Mtra=If[Gform=="qpqp",IdentityMatrix[4n],ToExpression["GO"<>Gform<>"FROMqpqp"][n]];
 	SparseArray[Mtra.G0.Transpose[Mtra]]];
+	
 GOPurifyStandardJBoson[rlist_,dimp_,Gform_]:=Module[{n,G,\[CapitalOmega]},
 	G=GOPurifyStandardGBoson[rlist,dimp,Gform];
 	\[CapitalOmega]=ToExpression["GO\[CapitalOmega]"<>Gform][Length[G]/2];
 	SparseArray[-G.\[CapitalOmega]]];
+	
 GOPurifyStandard\[CapitalOmega]Fermion[rlist_,dimp_,\[CapitalOmega]form_]:=Module[{n,m,cos,sin,Q14,Q23,Q5,G0,\[CapitalOmega]0,J0,Mtra},
 	cos=Table[ArrayFlatten[{{0,Cos[2 rr]},{-Cos[2 rr],0}}],{rr,rlist}];
 	sin=Table[ArrayFlatten[{{0,Sin[2 rr]},{Sin[2 rr],0}}],{rr,rlist}];
@@ -402,11 +419,12 @@ GOPurifyStandard\[CapitalOmega]Fermion[rlist_,dimp_,\[CapitalOmega]form_]:=Modul
 	If[m==n, G0=ArrayFlatten[{{Q14,Q23},{-Q23,Q14}}]//SparseArray, 
 	G0=ArrayFlatten[{{Q14,Q23,0},{-Q23,Q14,0},{0,0,Q5}}]//SparseArray];
 	
-	Mtra=If[\[CapitalOmega]form=="qpqp",IdentityMatrix[2n],ToExpression["GO"<>\[CapitalOmega]form<>"FROMqpqp"][n]];
+	Mtra=If[\[CapitalOmega]form=="qpqp",IdentityMatrix[2(n+m)],ToExpression["GO"<>\[CapitalOmega]form<>"FROMqpqp"][(n+m)]];
 	SparseArray[Mtra.G0.Transpose[Mtra]]];
-GOPurifyStandardJFermion[rlist_,dimp_,Gform_]:=Module[{n,G,\[CapitalOmega]},
-	\[CapitalOmega]=GOPurifyStandard\[CapitalOmega]Fermion[rlist,dimp,Gform];
-	G=ToExpression["GOG"<>Gform][Length[\[CapitalOmega]]/2];
+	
+GOPurifyStandardJFermion[rlist_,dimp_,\[CapitalOmega]form_]:=Module[{n,G,\[CapitalOmega]},
+	\[CapitalOmega]=GOPurifyStandard\[CapitalOmega]Fermion[rlist,dimp,\[CapitalOmega]form];
+	G=ToExpression["GOG"<>\[CapitalOmega]form][Length[\[CapitalOmega]]/2];
 	SparseArray[-G.\[CapitalOmega]]];
 
 
