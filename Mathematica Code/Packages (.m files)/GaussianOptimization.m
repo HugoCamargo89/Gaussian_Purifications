@@ -3,13 +3,16 @@
 BeginPackage["GaussianOptimization`"];
 
 
+(* ::Text:: *)
+(*Usage definitions*)
+
+
 (* Optimization algorithm *)
-GOOptimize::usage="{ffinal,Mfinal,listStepSizeIterations,listfValues,listAllfvalues,listGradientNorms,metricG}=GOOptimize[ProblemSpecific, SystemSpecfific, ProcessSpecific]
+GOOptimize::usage="{ \!\(\*SubscriptBox[\(F\), \(final\)]\) , \!\(\*SubscriptBox[\(M\), \(final\)]\) , \!\(\*SubscriptBox[\(N\), \(corrections\)]\) , {F} , {all F} , {|\[Del]|} }=GOOptimize[ProblemSpecific,SystemSpecific,ProcedureSpecific]
 
 ProblemSpecific={f,df} 
-SystemSpecific={\!\(\*SubscriptBox[\(J\), \(0\)]\),\!\(\*SubscriptBox[\(listM\), \(0\)]\),K,newMfunction} 
-ProcessSpecific={\!\(\*SubscriptBox[\(tol\), \(gradient\)]\),\!\(\*SubscriptBox[\(tol\), \(fvalues\)]\),steplimit,stepsizeroutine, track all trajectories?}
-";
+SystemSpecific={\!\(\*SubscriptBox[\(J\), \(0\)]\),\!\(\*SubscriptBox[\(listM\), \(0\)]\),K,G}
+ProcedureSpecific={\!\(\*SubscriptBox[\(tol\), \(F\)]\),\!\(\*SubscriptBox[\(tol\), \(\[Del]\)]\),\!\(\*SubscriptBox[\(lim\), \(iterations\)]\),step size sub-routine,track all trajectories?}";
 
 
 (* Symplectic forms / Covariance matrices *)
@@ -49,9 +52,8 @@ GOTransformJtoG::usage="GOTransformJtoG[J,'Jbasis','Gbasis'] generates G in Gbas
 GOTransformJto\[CapitalOmega]::usage="GOTransformJto\[CapitalOmega][J,'Jbasis','\[CapitalOmega]basis'] generates \[CapitalOmega] in \[CapitalOmega]basis associated with J in Jbasis";
 
 
-(* Random matrices *)
-GOMranSp::usage="MranSp[n,'Mform'] generates a random nxn symplectic matrix in the basis Mform";
-GOMranO::usage="MranO[n,'Mform'] generates a random nxn orthogonal matrix in the basis Mform";
+(* Random transformations *)
+GORandomTransformation::usage="GORandomTransformation[n,'Basis'] generates a random transformation in the Lie group with algebra 'Basis'";
 
 
 (* Tools for computational efficiency *)
@@ -68,9 +70,11 @@ GOSpBasisNoU1::usage="spBasisNoU1[N] generates Sp(2N,R)/U(1\!\(\*SuperscriptBox[
 GOOBasis::usage="OBasis[N] generates O(2N,R) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
 
 
-GOBasisGeneration::usage="GOBasisGeneration[{'basisA','basisB'},{dimA,dimB}] generates a compound Lie algebra basis with basis 'basisA' in subsystem A with dimA degrees of freedom and equivalently for subsystem B, in the basis qpqp";
-GOnewMGeneration::usage="GOnewMGeneration[{'basisA','basisB'},{dimA,dimB}] generates a function newM[\!\(\*SubscriptBox[\(M\), \(old\)]\),\[Epsilon],K] which defines a step of size \[Epsilon] from \!\(\*SubscriptBox[\(M\), \(old\)]\) in direction X for the basis GOBasisGeneration[{'basisA','basisB'},{dimA,dimB}]";
-GOSystemDimensions::usage"GOSystemDimensions[{'basisA','basisB'},{dimA,dimB}] returns {GOBasisGeneration,GOnewMGeneration} for the given parameters";
+GOMetricSp::usage="GOMetricSp[K,\!\(\*SubscriptBox[\(J\), \(0\)]\)] generates the natural metric for the symplectic manifold with Lie basis K, for an initial state \!\(\*SubscriptBox[\(J\), \(0\)]\)";
+GOMetricO::usage="GOMetricO[K,\!\(\*SubscriptBox[\(J\), \(0\)]\)] generates the natural metric for the orthogonal manifold with Lie basis K";
+
+
+GOCompoundBasis::usage="GOCompoundBasis[{'basisA','basisB'},{dimA,dimB}] generates a compound Lie algebra basis with basis 'basisA' in subsystem A with dimA degrees of freedom and equivalently for subsystem B, in the basis qpqp";
 
 
 (* Purifications and the standard form *)
@@ -78,7 +82,6 @@ GOExtractStdFormG::usage="{rlist,Tra}=GOExtractStdFormG[G]
 Returns the parameters for constructing the standard form of G (list of the \!\(\*SubscriptBox[\(r\), \(i\)]\) and the transformation matrix Tra that puts G into standard form";
 GOExtractStdForm\[CapitalOmega]::usage="{rlist,Tra}=GOExtractStdForm\[CapitalOmega][\[CapitalOmega]]
 Returns the parameters for constructing the standard form of \[CapitalOmega] (list of the \!\(\*SubscriptBox[\(r\), \(i\)]\) and the transformation matrix Tra that puts \[CapitalOmega] into standard form";
-GOExtractStdForm\[CapitalOmega]::usage="egal";
 GOPurifyStandardGBoson::usage="\!\(\*SubscriptBox[\(G\), \(sta\)]\)=GOPurifyStandardGBoson[rlist,N,'Gform']
 Constructs the bosonic purified state convariance matrix in the basis Gform with N degrees of freedom in the ancillary";
 GOPurifyStandardJBoson::usage="\!\(\*SubscriptBox[\(J\), \(sta\)]\)=GOPurifyStandardJBoson[rlist,N,'Jform']
@@ -103,6 +106,10 @@ GOenergyBos::usage="GOenergyBos[h] generates an energy function f[M,\!\(\*Subscr
 GOenergygradBos::usage="GOenergygradBos[h] generates an energy gradient function df[M,\!\(\*SubscriptBox[\(J\), \(0\)]\),K] for a bosonic quadratic Hamiltonian H=\!\(\*SubscriptBox[\(h\), \(ab\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(a\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(b\)]\) with respect to the Lie algebra basis K";
 GOenergyFerm::usage="GOenergyFerm[h] generates an energy function f[M,\!\(\*SubscriptBox[\(J\), \(0\)]\)] for a fermionic quadratic Hamiltonian H=\!\(\*SubscriptBox[\(h\), \(ab\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(a\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(b\)]\)";
 GOenergygradFerm::usage="GOenergygradBos[h] generates an energy gradient function df[M,\!\(\*SubscriptBox[\(J\), \(0\)]\),K] for a fermionic quadratic Hamiltonian H=\!\(\*SubscriptBox[\(h\), \(ab\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(a\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(b\)]\) with respect to the Lie algebra basis K";
+
+
+(* ::Text:: *)
+(*Functions*)
 
 
 Begin["Private`"];
@@ -165,15 +172,12 @@ GOTransformJto\[CapitalOmega][J_,Jform_,\[CapitalOmega]form_]:=Module[{n,Mtra,Jc
 	Jcorrect.Gcorrect];
 
 
-(* Random matrices *)
-GOMranSp[n_,Mform_]:=Module[{m1,m2,m3},
-	m1=RandomReal[{0,1},{n,n}];
-	m2=m1+Transpose[m1];
-	m3=ToExpression["GO\[CapitalOmega]"<>Mform][n/2].m2;
-	MatrixExp[m3]];
-GOMranO[n_,Mform_]:=Module[{m},
-	m=RandomReal[{-1,1},{n,n}];
-	Orthogonalize[m]];
+(* Random transformations *)
+GORandomTransformation[n_,LieBasis_]:=Module[{K,coeffs,KK,M},
+	K=ToExpression[LieBasis][n/2];
+	coeffs=RandomReal[{-1,1},Length[K]];
+	KK=coeffs.K;
+	M=MatrixExp[KK]];
 
 
 (* Matrix exp approximation *)
@@ -220,7 +224,7 @@ GOOBasis[n_]:=Module[{notK,Tr,Trtran},
 Return[Table[Tr.Ki.Transpose[Tr],{Ki,notK}]]];
 
 (* Generating compound basis *)
-GOBasisGeneration[{basisA_, basisB_}, {dimA_, dimB_}]:=Module[{dim,KA,KB,K},
+GOCompoundBasis[{basisA_, basisB_}, {dimA_, dimB_}]:=Module[{dim,KA,KB,K},
 	dim=2(dimA+dimB);
 			
 	(* Generate Lie algebra basis *)
@@ -239,25 +243,13 @@ GOBasisGeneration[{basisA_, basisB_}, {dimA_, dimB_}]:=Module[{dim,KA,KB,K},
 	K=If[dimB==0, KA, K];
 	Return[K]];
 
-(* Defining new transformations *)
-GOnewMGeneration[{basisA_, basisB_}, {dimA_, dimB_}]:=Which[
-		(* Case 1: Only B is varied *)
-		basisA=="None", Function[{m,s,x},Module[{dim,XX},
-		dim=2(dimA+dimB);
-		XX=x[[2dimA+1;;dim,2dimA+1;;dim]]; m.ArrayFlatten[{{IdentityMatrix[2dimA],0},{0,GOapproxExp[s,XX]}}]//SparseArray]],
-			
-		(* Case 2: Only A is varied *)
-		basisB=="None", Function[{m,s,x},Module[{XX},
-		XX=x[[1;;2dimA,1;;2dimA]]; m.ArrayFlatten[{{GOapproxExp[s,XX],0},{0,IdentityMatrix[2dimB]}}]//SparseArray]],
-			
-		(* Case 3: Both A and B are varied *)
-		True, Function[{m,s,x},m.GOapproxExp[s,x]]];
 
-(* Setting dimensional parameters for the optimisation *)
-GOSystemDimensions[{basisA_, basisB_}, {dimA_, dimB_}]:=Module[{K,newM},
-	K=GOBasisGeneration[{basisA, basisB}, {dimA, dimB}];
-	newM=GOnewMGeneration[{basisA, basisB}, {dimA, dimB}];
-	Return[{K,newM}]];
+(* Natural metrics *)
+GOMetricSp[LieBasis_,J0_]:=Module[{G0,invG0},
+	G0=J0.GO\[CapitalOmega]qpqp[Length[J0]/2]; invG0=Inverse[G0];
+	Table[Tr[K1.K2+K1.G0.Transpose[K2].invG0+G0.Transpose[K1].invG0.K2+Transpose[K2.K1]],{K1,LieBasis},{K2,LieBasis}]//SparseArray];
+
+GOMetricO[LieBasis_]:=IdentityMatrix[Length[LieBasis]]//SparseArray;
 
 
 (* --------------------------------------------------------------------Optimization algorithm-------------------------------------------------------------------------------- *)
@@ -268,14 +260,14 @@ GOOptimize[
 {function_, gradfunction_}, 
 
 (* System-specific input arguments *)
-{J0_, M0_, K_, newM_},
+{J0_, M0_, K_, metric_},
 
 (* Process-specific input arguments *)
 {gradtol_, Etol_, steplimit_:\[Infinity], stepcorrection_, trackall_:False}]:=
 
 	Module[{G0, invG0, (* Initial covariance matrix *)
 			Mold, Mnew, Eold, Enew,(* Updating function values *)
-			grad, Normgrad, X, \[Epsilon], GenerateM, invmetric, metric, (* Movement *)
+			grad, Normgrad, X, \[Epsilon], GenerateM, invmetric, newM, (* Movement *)
 			M0list, Elist, Normlist, diffE, diffNorm, (* Tracking values *)
 			stepcount, dimM0, CorrList, order1, order2, order, keepnumber, loosenumber, donelist, stopreason,(* Tracking trajectories *) 
 			resultIndex, doneE, doneElist, doneM, doneNorm, FinalE, FinalM, FinalElist, FinalNormlist}, (* Results *)
@@ -283,17 +275,17 @@ GOOptimize[
 		dimM0=Length[M0]; CorrList=List[]; M0list=M0; donelist=List[]; Elist=List[];
 		
 		(* Sub-rountine for step size - this definition is always the same but depends on the stepcorrection function *)
+		newM[m_,s_,x_]:=m.GOapproxExp[s,x];
 		GenerateM[\[Epsilon]_,Mold_,Mnew_,Eold_,Enew_,X_]:=Module[{s=\[Epsilon], enew=Enew, corr=0, mnew=Mnew},
 			While[enew>Eold, s=stepcorrection[s]; corr++; mnew=newM[Mold,s,X]; enew=function[mnew,J0];]; AppendTo[CorrList,corr]; Return[{mnew//SparseArray,enew}]];
 			
-		(* Define natural metric *)
-		G0=J0.GO\[CapitalOmega]qpqp[Length[J0]/2]; invG0=Inverse[G0];
-		metric=Table[Tr[K1.K2+K1.G0.Transpose[K2].invG0+G0.Transpose[K1].invG0.K2+Transpose[K2.K1]],{K1,K},{K2,K}]; invmetric=PseudoInverse[metric];
+		(* Define inverse of natural metric *)
+		invmetric=PseudoInverse[metric];
 		
 		(* --------Iteration-------- *)
 		
 		(* Define function values and gradient for initial values *) 
-		Mold=M0; Eold=function[#,J0]&/@Mold; grad=gradfunction[#,J0,K]&/@Mold; grad=(invmetric.#)&/@grad; Normgrad=Norm/@grad; X=SparseArray/@MapThread[(-#1).K/Norm[#2]&,{grad,Normgrad}]; 
+		Mold=M0; Eold=function[#,J0]&/@Mold; {grad,Normgrad,X}=(gradfunction[#,J0,K,invmetric]&/@Mold)//Transpose; 
 		
 		Elist={Eold}//Transpose; Normlist={Normgrad}//Transpose; diffE=Eold; diffNorm=Normgrad; 
 		
@@ -316,10 +308,10 @@ GOOptimize[
 			{Mnew,Enew}=MapThread[GenerateM,{\[Epsilon],Mold,Mnew,Eold,Enew,X}]//Transpose;
 		
 		(* Define function values and gradient for new values *) 
-		Mold=Mnew; Eold=Enew; grad=gradfunction[#,J0,K]&/@Mold; grad=(invmetric.#)&/@grad; Normgrad=Norm/@grad; X=SparseArray/@MapThread[(-#1).K/Norm[#2]&,{grad,Normgrad}];
+		Mold=Mnew; Eold=Enew; {grad,Normgrad,X}=(gradfunction[#,J0,K,invmetric]&/@Mold)//Transpose; 
 		Elist=Elist//Transpose; Elist=AppendTo[Elist,Eold]//Transpose; Normlist=Normlist//Transpose; Normlist=AppendTo[Normlist,Normgrad]//Transpose;
 		diffE=(Abs[#[[-1]]-#[[-2]]]/#[[-1]])&/@Elist; diffNorm=Abs[#[[-1]]-#[[-2]]]&/@Normlist;
-		
+	
 		(* Update step count *)
 		stepcount++;
 											
@@ -348,7 +340,7 @@ GOOptimize[
 	Print["Reason for termination: "<>stopreason];
 	(* --- Output --- *)
 
-	Return[{FinalE,FinalM,CorrList,FinalElist,Elist,FinalNormlist,metric}]
+	Return[{FinalE,FinalM,CorrList,FinalElist,Elist,FinalNormlist}]
 ];
 
 
@@ -445,38 +437,45 @@ GOEoPBos[ResAA_]:=Function[{M,J0}, Module[{n,D,logDD},
 	Re[1/2 Tr[D.logDD]]//Chop]];
 GOEoPFerm[ResAA_]:=Function[{M,J0}, Module[{n,D,logD},
 	n=Length[J0];
-	D=(M.(IdentityMatrix[n]+I J0).GOinvMSp[M]/2)[[ResAA,ResAA]];
+	D=(M.(IdentityMatrix[n]+I J0).Inverse[M]/2)[[ResAA,ResAA]];
 	logD=GOConditionalLog[D];
 	Re[-Tr[D.logD]]//Chop]];
-GOEoPgradBos[ResAA_]:=Function[{M,J0,K},Module[{n,nn,invM,dJ,D,dD,logDD},
+	
+GOEoPgradBos[ResAA_]:=Function[{M,J0,K,invmetric},Module[{n,nn,invM,dJ,D,dD,logDD,grad,Normgrad,X},
 	n=Length[J0];
 	invM=GOinvMSp[M];
 	dJ=Table[M.(KIi.J0-J0.KIi).invM,{KIi,K}];
 	dD=Table[I/2 dJAAi[[ResAA,ResAA]],{dJAAi,dJ}];
 	D=(M.(IdentityMatrix[n]+I J0).invM/2)[[ResAA,ResAA]];
 	logDD=GOConditionalLog[D.D];
-	Table[Re[1/2 Tr[dDi.logDD]]//Chop,{dDi,dD}]]];
-GOEoPgradFerm[ResAA_]:=Function[{M,J0,K},Module[{n,nn,invM,KI,dJ,D,dD,logD},
+	grad=invmetric.Table[Re[1/2 Tr[dDi.logDD]]//Chop,{dDi,dD}];
+	Normgrad=Norm[grad]; X=-grad.K/Normgrad;
+	{grad,Normgrad,X//SparseArray}]];
+GOEoPgradFerm[ResAA_]:=Function[{M,J0,K,invmetric},Module[{n,nn,invM,KI,dJ,D,dD,logD,grad,Normgrad,X},
 	n=Length[J0]; nn=Length[J0];
-	invM=GOinvMSp[M];
+	invM=Inverse[M];
 	KI=Table[PadLeft[Ki,{n,n}],{Ki,K}];
 	dJ=Table[M.(KIi.J0-J0.KIi).invM,{KIi,KI}];
 	dD=Table[I/2 dJAAi[[ResAA,ResAA]],{dJAAi,dJ}];
 	D=(M.(IdentityMatrix[n]+I J0).invM/2)[[ResAA,ResAA]];
 	logD=GOConditionalLog[D];
-	Table[Re[-Tr[dDi.logD]]//Chop,{dDi,dD}]]];
+	grad=invmetric.Table[Re[-Tr[dDi.logD]]//Chop,{dDi,dD}];
+	Normgrad=Norm[grad]; X=-grad.K/Normgrad;
+	{grad,Normgrad,X//SparseArray}]];
 	
 (* --------------- Complexity of Purification ---------------- *)
 (* Functionals and gradients for bosonic and fermionic CoP *)
 GOCoPBos[JT_]:=Function[{M,Jref0},Module[{invM,D},
 	D=M.Jref0.GOinvMSp[M].Inverse[JT]; 
 	Re[Sqrt[Total[Log[#1]^2&/@Eigenvalues[D]]/8]]]];
-GOCoPgradBos[JT_]:=Function[{M,Jref0,K},Module[{dimA,dimB,invM,invJT,D,invD,dD},
+GOCoPgradBos[JT_]:=Function[{M,Jref0,K,invmetric},Module[{dimA,dimB,invM,invJT,D,invD,dD,grad,Normgrad,X},
 	dimB=Length[K[[1]]]; dimA=Length[M]-dimB;
 	invM=GOinvMSp[M]; invJT=Inverse[JT];
 	D=M.Jref0.invM.invJT; invD=Inverse[D];
 	dD=Table[M.(KIi.Jref0-Jref0.KIi).invM.invJT,{KIi,K}];
-	Table[Re[2Tr[GOConditionalLog[D].invD.dDi]],{dDi,dD}]]];
+	grad=invmetric.Table[Re[2Tr[GOConditionalLog[D].invD.dDi]],{dDi,dD}];
+	Normgrad=Norm[grad]; X=-grad.K/Normgrad;
+	{grad,Normgrad,X//SparseArray}]];
 
 (* --------------- Energy of quadratic Hamiltonians ---------------- *)
 GOenergyBos[h_]:=Function[{M,J0},Module[{\[CapitalOmega]0,G},
