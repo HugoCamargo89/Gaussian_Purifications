@@ -96,11 +96,13 @@ Constructs the fermionic purified state complex structure in the basis Jform wit
 GORestrictionAA::usage="GORestrictionAA[{dimA1, dimB1, dimA2, dimB2}] generates the restriction function for use in calculating EoP for a system decomposed into degrees of freedom {dimA1, dimB1, dimA2, dimB2}";
 GOEoPBos::usage="GOEoPBos[Restriction] generates a function f[M,\!\(\*SubscriptBox[\(J\), \(0\)]\)] which calculates the bosonic EoP for the given restriction";
 GOEoPFerm::usage="GOEoPBos[Restriction] generates a function f[M,\!\(\*SubscriptBox[\(J\), \(0\)]\)] which calculates the fermionic EoP for the given restriction";
-GOEoPgradBos::usage="GOEoPgradBos[Restriction] generates a function df[M,\!\(\*SubscriptBox[\(J\), \(0\)]\),K] which calculates the gradient of the bosonic EoP for the given restriction with respect to the Lie algebra basis K";
-GOEoPgradFerm::usage="GOEoPgradFerm[Restriction] generates a function df[M,\!\(\*SubscriptBox[\(J\), \(0\)]\),K] which calculates the gradient of the fermionic EoP for the given restriction with respect to the Lie algebra basis K";
+GOEoPgradBos::usage="GOEoPgradBos[Restriction] generates a function df[M,\!\(\*SubscriptBox[\(J\), \(0\)]\),K,\!\(\*SuperscriptBox[\(G\), \(-1\)]\)] which calculates the gradient of the bosonic EoP for the given restriction with respect to the Lie algebra basis K";
+GOEoPgradFerm::usage="GOEoPgradFerm[Restriction] generates a function df[M,\!\(\*SubscriptBox[\(J\), \(0\)]\),K,\!\(\*SuperscriptBox[\(G\), \(-1\)]\)] which calculates the gradient of the fermionic EoP for the given restriction with respect to the Lie algebra basis K";
 (* Application: Complexity of purification *)
 GOCoPBos::usage="GOCoPBos[\!\(\*SubscriptBox[\(J\),\(T\)]\)] generates a function f[M,\!\(\*SubscriptBox[\(J\), \(R0\)]\)] which calculates the bosonic CoP with respect to the given target state \!\(\*SubscriptBox[\(J\), \(T\)]\)";
-GOCoPgradBos::usage="GOCoPBos[\!\(\*SubscriptBox[\(J\), \(T\)]\)] generates a function df[M,\!\(\*SubscriptBox[\(J\), \(R0\)]\),K] which calculates the gradient of the bosonic CoP with respect to the given target state \!\(\*SubscriptBox[\(J\), \(T\)]\) and the Lie algebra basis K";
+GOCoPgradBos::usage="GOCoPBos[\!\(\*SubscriptBox[\(J\), \(T\)]\)] generates a function df[M,\!\(\*SubscriptBox[\(J\), \(R0\)]\),K,\!\(\*SuperscriptBox[\(G\), \(-1\)]\)] which calculates the gradient of the bosonic CoP with respect to the given target state \!\(\*SubscriptBox[\(J\), \(T\)]\) and the Lie algebra basis K";
+GOCoPFerm::usage="GOCoPFerm[\!\(\*SubscriptBox[\(J\),\(T\)]\)] generates a function f[M,\!\(\*SubscriptBox[\(J\), \(R0\)]\)] which calculates the fermionic CoP with respect to the given target state \!\(\*SubscriptBox[\(J\), \(T\)]\)";
+GOCoPgradFerm::usage="GOCoPgradFerm[\!\(\*SubscriptBox[\(J\), \(T\)]\)] generates a function df[M,\!\(\*SubscriptBox[\(J\), \(R0\)]\),K,\!\(\*SuperscriptBox[\(G\), \(-1\)]\)] which calculates the gradient of the fermionic CoP with respect to the given target state \!\(\*SubscriptBox[\(J\), \(T\)]\) and the Lie algebra basis K";
 (* Appliation: Energy of quadratic Hamiltonians *)
 GOenergyBos::usage="GOenergyBos[h] generates an energy function f[M,\!\(\*SubscriptBox[\(J\), \(0\)]\)] for a bosonic quadratic Hamiltonian H=\!\(\*SubscriptBox[\(h\), \(ab\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(a\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(b\)]\)";
 GOenergygradBos::usage="GOenergygradBos[h] generates an energy gradient function df[M,\!\(\*SubscriptBox[\(J\), \(0\)]\),K] for a bosonic quadratic Hamiltonian H=\!\(\*SubscriptBox[\(h\), \(ab\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(a\)]\)\!\(\*SuperscriptBox[\(\[Xi]\), \(b\)]\) with respect to the Lie algebra basis K";
@@ -468,12 +470,24 @@ GOEoPgradFerm[ResAA_]:=Function[{M,J0,K,invmetric},Module[{n,nn,invM,KI,dJ,D,dD,
 GOCoPBos[JT_]:=Function[{M,Jref0},Module[{invM,D},
 	D=M.Jref0.GOinvMSp[M].Inverse[JT]; 
 	Re[Sqrt[Total[Log[#1]^2&/@Eigenvalues[D]]/8]]]];
+GOCoPFerm[JT_]:=Function[{M,Jref0},Module[{invM,D},
+	D=M.Jref0.Transpose[M].Inverse[JT]; 
+	Re[Sqrt[Total[I Log[#1]^2&/@Eigenvalues[D]]/8]]]];	
+	
 GOCoPgradBos[JT_]:=Function[{M,Jref0,K,invmetric},Module[{dimA,dimB,invM,invJT,D,invD,dD,grad,Normgrad,X},
 	dimB=Length[K[[1]]]; dimA=Length[M]-dimB;
 	invM=GOinvMSp[M]; invJT=Inverse[JT];
 	D=M.Jref0.invM.invJT; invD=Inverse[D];
 	dD=Table[M.(KIi.Jref0-Jref0.KIi).invM.invJT,{KIi,K}];
 	grad=invmetric.Table[Re[2Tr[GOConditionalLog[D].invD.dDi]],{dDi,dD}];
+	Normgrad=Norm[grad]; X=-grad.K/Normgrad;
+	{grad,Normgrad,X//SparseArray}]];
+GOCoPgradFerm[JT_]:=Function[{M,Jref0,K,invmetric},Module[{dimA,dimB,invM,invJT,D,invD,dD,grad,Normgrad,X},
+	dimB=Length[K[[1]]]; dimA=Length[M]-dimB;
+	invM=Transpose[M]; invJT=Inverse[JT];
+	D=M.Jref0.invM.invJT; invD=Inverse[D];
+	dD=Table[M.(KIi.Jref0-Jref0.KIi).invM.invJT,{KIi,K}];
+	grad=invmetric.Table[Re[-2Tr[GOConditionalLog[D].invD.dDi]],{dDi,dD}];
 	Normgrad=Norm[grad]; X=-grad.K/Normgrad;
 	{grad,Normgrad,X//SparseArray}]];
 
