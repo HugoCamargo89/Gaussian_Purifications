@@ -68,6 +68,7 @@ GOSpBasis::usage="SpBasis[N] generates Sp(2N,R) Lie algebra basis in basis (\!\(
 GOSpBasisNoUN::usage="spBasisNoUN[N] generates Sp(2N,R)/U(N) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
 GOSpBasisNoU1::usage="spBasisNoU1[N] generates Sp(2N,R)/U(1\!\(\*SuperscriptBox[\()\), \(N\)]\) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
 GOOBasis::usage="OBasis[N] generates O(2N,R) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
+GOSpBasisNoSp::usage="GOSpBasisNoSp[\!\(\*SubscriptBox[\(N\), \(A\)]\),\!\(\*SubscriptBox[\(N\), \(B\)]\)] generates the compound Lie algebra basis sp(2(\!\(\*SubscriptBox[\(N\), \(A\)]\)+\!\(\*SubscriptBox[\(N\), \(B\)]\)),R)/sp(2\!\(\*SubscriptBox[\(N\), \(A\)]\),R) x sp(2\!\(\*SubscriptBox[\(N\), \(B\)]\),R)";
 
 
 GOMetricSp::usage="GOMetricSp[K,\!\(\*SubscriptBox[\(J\), \(0\)]\)] generates the natural metric for the symplectic manifold with Lie basis K, for an initial state \!\(\*SubscriptBox[\(J\), \(0\)]\)";
@@ -175,8 +176,8 @@ GOTransformJto\[CapitalOmega][J_,Jform_,\[CapitalOmega]form_]:=Module[{n,Mtra,Jc
 
 
 (* Random transformations *)
-GORandomTransformation[n_,LieBasis_]:=Module[{K,coeffs,KK,M},
-	K=ToExpression[LieBasis][n/2];
+GORandomTransformation[{dim1_,dim2_},LieBasis_]:=Module[{K,coeffs,KK,M},
+	K=ToExpression[LieBasis][dim1,dim2];
 	coeffs=RandomReal[{-1,1},Length[K]];
 	KK=coeffs.K;
 	M=MatrixExp[KK]];
@@ -199,7 +200,8 @@ GOinvMSp[m_,Mform_:"qpqp"]:=Module[{\[CapitalOmega]}, \[CapitalOmega]=ToExpressi
 
 
 (* Lie algebra bases *)
-GOSpBasis[n_]:=Module[{SYM,ASYM,notK,Tr,Trtran},
+GOSpBasis[dim1_,dim2_]:=Module[{n,SYM,ASYM,notK,Tr,Trtran},
+	n=dim1+dim2;
 	SYM=Flatten[Table[SparseArray[{{i,j}->If[i!=j,N[1/Sqrt[2]],1],{j,i}->If[i!=j,N[1/Sqrt[2]],1]},{n,n}],{i,1,n},{j,i,n}],1];
 	ASYM=Flatten[Table[SparseArray[{{i,j}->N[1/Sqrt[2]],{j,i}->-N[1/Sqrt[2]]},{n,n}],{i,1,n},{j,i+1,n}],1];
 	notK=Join[
@@ -210,27 +212,41 @@ GOSpBasis[n_]:=Module[{SYM,ASYM,notK,Tr,Trtran},
 	Tr=GOqpqpFROMqqpp[n];
 Return[Table[Tr.Ki.Transpose[Tr],{Ki,notK}]]]
 
-GOSpBasisNoUN[N_]:=Module[{Kold},
-	Kold=GOSpBasis[N];
+GOSpBasisNoUN[dim1_,dim2_]:=Module[{n,Kold},
+	n=dim1+dim2;
+	Kold=GOSpBasis[n];
 Return[Table[If[SymmetricMatrixQ[old],old],{old,Kold}]//DeleteCases[#,Null]&]]
 
-GOSpBasisNoU1[N_]:=Module[{Kold,notK1,notK2,Knew},
+GOSpBasisNoU1[dim1_,dim2_]:=Module[{N,Kold,notK1,notK2,Knew},
+	N=dim1+dim2;
 	Kold=GOSpBasis[N];
 	notK1=Table[If[SymmetricMatrixQ[old]==False,old],{old,Kold}]//DeleteCases[#,Null]&;
 	notK2=Table[If[Length[notK["NonzeroValues"]]==2,notK],{notK,notK1}]//DeleteCases[#,Null]&;
 Return[DeleteCases[Kold,Alternatives@@notK2]]];
 
-GOOBasis[n_]:=Module[{notK,Tr,Trtran},
+GOSpBasisNoSp[dim1_,dim2_]:=Module[{FullBasis,Indices1,Indices2,Indices,MQ2,MQ3,CheckM,CheckList},
+	FullBasis=GOSpBasis[dim1,dim2];
+	Indices1=Range[2dim1];Indices2=Range[2dim1+1,2(dim1+dim2)];
+
+	MQ2[M_]:=M[[Indices1,Indices2]];MQ3[M_]:=M[[Indices2,Indices1]];
+	CheckM[M_]:=Module[{Q2,Q3},
+		Q2=MQ2[M]; Q3=MQ3[M]; AllTrue[Q2//Flatten,#==0&]&&AllTrue[Q2//Flatten,#==0&]];
+
+	CheckList=CheckM/@FullBasis; Indices=Position[CheckList,False]//Flatten;
+	FullBasis[[Indices]]];
+
+GOOBasis[dim1_,dim2_]:=Module[{n,notK,Tr,Trtran},
+	n=dim1+dim2;
 	notK=Flatten[Table[SparseArray[{{i,j}->1,{j,i}->-1},{2n,2n}],{i,1,2n},{j,i+1,2n}],1];
 	Tr=GOqpqpFROMqqpp[n];
 Return[Table[Tr.Ki.Transpose[Tr],{Ki,notK}]]];
 
 (* Generating compound basis *)
-GOCompoundBasis[{basisA_, basisB_}, {dimA_, dimB_}]:=Module[{dim,KA,KB,K},
-	dim=2(dimA+dimB);
+GOCompoundBasis[{basisA_, basisB_}, {dimA1_,dimA2_,dimB1_,dimB2_}]:=Module[{dim,dimA,dimB,KA,KB,K},
+	dimA=dimA1+dimA2; dimB=dimB1+dimB2; dim=2(dimA+dimB);
 			
 	(* Generate Lie algebra basis *)
-	KA=ToExpression[basisA][dimA]; KB=ToExpression[basisB][dimB];
+	KA=ToExpression[basisA][dimA1,dimA2]; KB=ToExpression[basisB][dimB1,dimB2];
 	K=Which[
 		(* Case 1: Only B is varied *)
 		basisA=="None", Table[PadLeft[Ki,{dim,dim}],{Ki,KB}],
@@ -288,7 +304,7 @@ GOOptimize[
 		
 		(* Define function values and gradient for initial values *) 
 		Mold=M0; Eold=function[#,J0]&/@Mold; {grad,Normgrad,X}=(gradfunction[#,J0,K,invmetric]&/@Mold)//Transpose; 
-		
+	
 		Elist={Eold}//Transpose; Normlist={Normgrad}//Transpose; diffE=Eold; diffNorm=Normgrad; 
 		
 		(* Initialise step count *)
@@ -313,7 +329,7 @@ GOOptimize[
 		Mold=Mnew; Eold=Enew; {grad,Normgrad,X}=(gradfunction[#,J0,K,invmetric]&/@Mold)//Transpose; 
 		Elist=Elist//Transpose; Elist=AppendTo[Elist,Eold]//Transpose; Normlist=Normlist//Transpose; Normlist=AppendTo[Normlist,Normgrad]//Transpose;
 		diffE=(Abs[#[[-1]]-#[[-2]]]/#[[-1]])&/@Elist; diffNorm=Abs[#[[-1]]-#[[-2]]]&/@Normlist;
-	
+
 		(* Update step count *)
 		stepcount++;
 											
@@ -326,7 +342,7 @@ GOOptimize[
 			order1=Ordering[Eold,All,Less]; order2=Ordering[Normgrad,All,Greater]; 
 			If[keepnumber>1,order=Join[Take[order1,keepnumber],Take[order2,keepnumber]],order=Take[order1,keepnumber]];
 			
-			{Mold, Eold, grad, Normgrad, X, M0list, Elist, Normlist, diffE, diffNorm}=(#[[order]])&/@{Mold, Eold, grad, Normgrad, X, M0list, Elist, Normlist, diffE, diffNorm}; dimM0=Length[order];
+			{Mold, Eold, grad, Normgrad, X, M0list, Elist, Normlist, diffE, diffNorm}=(#[[order]])&/@{Mold, Eold, grad, Normgrad, X, M0list, Elist, Normlist, diffE, diffNorm}; dimM0=Length[order];	
 			];			
 		];
 	
@@ -377,7 +393,7 @@ GOExtractStdForm\[CapitalOmega][\[CapitalOmega]_]:=Module[{tuples,selecttuples,v
 	g=vectors.ConjugateTranspose[vectors]//Chop;
 	invg=MatrixPower[Inverse[g],1/2];
 	Mtra=Table[{Sqrt[2]*Re[x],Sqrt[2]*Im[x]},{x,invg.vectors}]//Flatten[#,1]&;
-	rlist=1/2ArcCos[Im[#]]&/@values;
+	rlist=1/2ArcCos[Im[#]]&/@values//N;
 	Return[{rlist,Mtra}]];
 
 GOPurifyStandardGBoson[rlist_,dimp_,Gform_]:=Module[{cosh,sinh,diag,Q14,Q23,Q5,G0,\[CapitalOmega]0,J0,n,m,Mtra},
