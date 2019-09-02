@@ -157,12 +157,17 @@ where $\vacket$ is the fermionic vacuum state vector and $1/\sqrt{Z}$ is a norma
 \end{equation}
 with $\mathrm{g}_k$ being an auxiliary Grassmann variables fulfilling $\{ g_j, \fd_k \} = 0$, $\intd g$ a Grassmann integration over these variables\footnote{A Grassmann integration $\intd{g_k}$ is simply defined by $\intd{g_j} g_k = \delta_{j,k}$, i.e., equivalent to a derivative.}, and $B$ an $M \times N$ matrix. In general, $0 \leq M \leq N$, and we can always ``gauge'' the matrices $A$ and $B$ so that $B A = 0$.
 
-We now compute the covariance matrix $\Gamma$, defined as
+Assuming states of the form \eqref{EQ_FERM_GAUSS_DEF}, we now compute the fermionic covariance matrices $F$ and $G$, defined as
+\begin{align}
+F_{j,k} = \frac{1}{2}\sandwich{\psi}{\fe_j \fe_k - \fd_j \fd_k}{\psi} \ , \\
+G_{j,k} = \frac{1}{2}\sandwich{\psi}{\fe_j \fd_k - \fd_j \fe_k}{\psi} \ .
+\end{align}
+Both can be combined into one $2N \times 2N$ covariance matrix $\Gamma$ of \emph{Majorana operators} $\m_k$,
 \begin{equation}
 \Gamma_{j,k}(\psi) =\bra{\psi}\tfrac{\i\,}{2} [\m_j,\m_k]\ket \psi \ ,
 \end{equation}
-resulting from states of the form \eqref{EQ_FERM_GAUSS_DEF}.
-First, perform an orthogonal transformation on the fermionic modes,
+where the operators are defined via $\fe_k = \m_{2k-1} + \i \m_{2k}$ and  $\fd_k = \m_{2k-1} - \i \m_{2k}$.
+To compute the covariance matrices, we first perform an orthogonal transformation on the fermionic modes,
 \begin{equation}
 \fe_j \to \ft_j = \sum_k W_{j,k} \fe_k \ ,
 \end{equation} 
@@ -185,7 +190,24 @@ This transformation is possible for any $A \in \mathbb{C}^{N \times N}$. This gr
 \end{equation}
 Requiring normalized states $\braket{\psi}\psi = 1$ fixes the normalization as
 \begin{equation}
-Z = \prod_{k=1}^{N/2} \left(1 + \lambda_k\right)\ .
+Z = \prod_{k=1}^{N/2} \left(1 + |\lambda_k|^2\right)\ .
 \end{equation}
+We can now compute the covariance matrices $\tilde{F}$ and $\tilde{G}$ in the transformed operators, which becomes a two-mode problem. Solving it yields
+\begin{align}
+\tilde{F} &= 
+\bigoplus_k
+\begin{pmatrix}
+0 & \Re(\lambda_k)/(1 + |\lambda_k|^2) \\
+-\Re(\lambda_k)/(1 + |\lambda_k|^2) & 0
+\end{pmatrix}\ , \\
+\tilde{G} &= 
+\bigoplus_k
+\begin{pmatrix}
+(1 - |\lambda_k|^2)/(1 + |\lambda_k|^2) & 0 \\
+0 & (1 - |\lambda_k|^2)/(1 + |\lambda_k|^2)
+\end{pmatrix}\ .
+\end{align}
+To revert to the original fermionic operators, we then simply compute $F=W^\mathrm{T} \tilde{F} W$ and $G=W^\mathrm{T} \tilde{G} W$.
+
 
 \end{document}
