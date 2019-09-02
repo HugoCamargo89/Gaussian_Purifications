@@ -15,15 +15,14 @@
 \usepackage[usenames,dvipsnames]{color}
 \usepackage{dsfont}
 
-\renewcommand{\i}{\,\ensuremath\mathrm{i\,}}
-\newcommand{\id}{\mathds{1}}
-\newcommand{\tr}{\mathrm{tr}}
+\include{math_defs}
+
 \newcommand{\intd}[1]{\int\mathrm{d}#1\,}
 
 \begin{document}
 
-\section*{Covariance matrices and scalar fields}
-\subsection*{Real case}
+\section{Covariance matrices and scalar fields}
+\subsection{Real case}
 
 In the study of entanglement of purification (EoP), we considered mixed states with density matrices of the form
 \begin{equation}
@@ -97,7 +96,7 @@ Q R^{-1} Q^\mathrm{T} &= \Gamma_{\pi\pi} - \Gamma_{\phi\phi}^{-1} \ . &
 \end{align}
 Note that due to our assumption of real matrices $A,B$, the $\phi\pi$ correlator can only be imaginary, and must therefore vanish.
 
-\subsection*{Complex case}
+\subsection{Complex case}
 We now consider the more complicated case where the exponential term in \eqref{EQ_RHO2} is complex, i.e., we assume density matrices of the form
 \begin{equation}
 \rho(\phi, \phi^\prime) = \sqrt{\det\frac{A+B}{\pi}} e^{-\frac{1}{2} (\phi^\mathrm{T} (A+\i C) \phi + {\phi^\prime}^\mathrm{T} (A-\i C) \phi^\prime + \phi^\mathrm{T} (B+\i D) \phi^\prime + {\phi^\prime}^\mathrm{T} (B-\i D) \phi ) }\ ,
@@ -145,5 +144,48 @@ C &= -\frac{1}{2} \left( \Gamma_{\pi\phi} \Gamma_{\phi\phi}^{-1} + \Gamma_{\phi\
 D &=  -\frac{1}{2} \left( \Gamma_{\pi\phi} \Gamma_{\phi\phi}^{-1} - \Gamma_{\phi\phi}^{-1} \Gamma_{\phi\pi} \right)\ .
 \end{align}
 
+\section{Covariance matrices and fermions}
+\subsection{Gaussian states}
+An even-parity fermionic Gaussian state vector $\ket\psi$ in an $N$-fermion Hilbert space can be parametrized by an antisymmetric $N \times N$ \emph{generating matrix} $A$ in the form
+\begin{equation}
+\label{EQ_FERM_GAUSS_DEF}
+\ket \psi = \frac{1}{\sqrt{Z}} \exp\left( \frac{1}{2} \sum_{j,k=1}^N A_{j,k} \fd_j \fd_k \right) \vacket \ ,
+\end{equation}
+where $\vacket$ is the fermionic vacuum state vector and $1/\sqrt{Z}$ is a normalization factor. To generalize this to odd-parity states, one would need to ``shift'' the vacuum by a term linear in creation operators $\fd_k$ in the form
+\begin{equation}
+\vacket \to \intd g B_{j,k}\, \mathrm{g}_j \fd_k \vacket \ ,
+\end{equation}
+with $\mathrm{g}_k$ being an auxiliary Grassmann variables fulfilling $\{ g_j, \fd_k \} = 0$, $\intd g$ a Grassmann integration over these variables\footnote{A Grassmann integration $\intd{g_k}$ is simply defined by $\intd{g_j} g_k = \delta_{j,k}$, i.e., equivalent to a derivative.}, and $B$ an $M \times N$ matrix. In general, $0 \leq M \leq N$, and we can always ``gauge'' the matrices $A$ and $B$ so that $B A = 0$.
+
+We now compute the covariance matrix $\Gamma$, defined as
+\begin{equation}
+\Gamma_{j,k}(\psi) =\bra{\psi}\tfrac{\i\,}{2} [\m_j,\m_k]\ket \psi \ ,
+\end{equation}
+resulting from states of the form \eqref{EQ_FERM_GAUSS_DEF}.
+First, perform an orthogonal transformation on the fermionic modes,
+\begin{equation}
+\fe_j \to \ft_j = \sum_k W_{j,k} \fe_k \ ,
+\end{equation} 
+where $W \in O(N)$, so that the generating matrix becomes block-diagonal. Explicitly, $A = W^\mathrm{T} \Sigma W$ with
+\begin{equation}
+\Sigma = 
+\bigoplus_k
+\begin{pmatrix}
+0 & \lambda_k \\
+-\lambda_k & 0
+\end{pmatrix}\ .
+\end{equation}
+If $N$ is odd, $\Sigma$ contains an additional all-zero row and column.
+This transformation is possible for any $A \in \mathbb{C}^{N \times N}$. This greatly simplifies the form of \eqref{EQ_FERM_GAUSS_DEF}, which now reads
+\begin{equation}
+\ket \psi = \frac{1}{\sqrt{Z}} \exp\left( \frac{1}{2} \sum_{j,k=1}^N \Sigma_{j,k} \ftd_j \ftd_k \right) \vacket 
+= \frac{1}{\sqrt{Z}} \prod_{k=1}^{N/2} \exp\left(\lambda_k \ftd_{2k-1} \ftd_{2k}\right) \vacket
+= \frac{1}{\sqrt{Z}} \prod_{k=1}^{N/2} \left(1 + \lambda_k \ftd_{2k-1} \ftd_{2k}\right) \vacket
+\ .
+\end{equation}
+Requiring normalized states $\braket{\psi}\psi = 1$ fixes the normalization as
+\begin{equation}
+Z = \prod_{k=1}^{N/2} \left(1 + \lambda_k\right)\ .
+\end{equation}
 
 \end{document}

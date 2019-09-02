@@ -1,0 +1,218 @@
+%%%================================================
+%%%==============  new commands  =======================
+%%%================================================
+%%% colors
+\newcommand{\cred}{\color{red}}
+\newcommand{\cblue}{\color{blue}}
+\newcommand{\cgreen}{\color{cyan}}
+\newcommand{\wi}{\textcolor{green}}
+\newcommand{\old}{\textcolor{blue}}
+
+%%% mathbb
+\usepackage{dsfont}
+\newcommand{\id}{\mathds{1}}
+
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\CC}{\mathbb{C}}
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\EE}{\mathbb{E}}
+\renewcommand{\O}{\mathbb{O}}%orthogonal group
+\newcommand{\SO}{\mathbb{SO}}
+
+%%% mathrm
+\newcommand{\tr}{\mathrm{tr}}
+\newcommand{\e}{\ensuremath\mathrm{e}}
+ \renewcommand{\i}{\,\ensuremath\mathrm{i}}
+\newcommand{\X}{X}
+\newcommand{\Y}{Y}
+\newcommand{\Z}{Z}
+
+%%% mathcal
+\newcommand{\J}{\mathcal{J}}
+\newcommand{\li}{\mathcal{L}}
+\newcommand{\ki}{\mathcal{K}}
+\newcommand{\W}{\mathcal{W}}
+\newcommand{\F}{F_\W}
+\renewcommand{\S}{\mathcal{S}_{n}}
+
+% new thm environments
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{conjecture}[theorem]{Conjecture}
+% \newtheorem{example}[theorem]{Example}
+% \newtheorem{implication}[theorem]{Implication}
+% \newtheorem{assumption}[theorem]{Assumption}
+% \newtheorem{corollary}[theorem]{Corollary}
+% \newtheorem{observation}[theorem]{Observation}
+
+% math signs with small spacing
+\newcommand{\spl}{\,{+}\,}
+\newcommand{\smin}{\,{-}\,}
+\newcommand{\seq}{\,{=}\,}
+\newcommand{\sneq}{\,{\neq}\,}
+\newcommand{\sle}{\,{<}\,}
+\newcommand{\sleq}{\,{\leq}\,}
+\newcommand{\sgr}{\,{>}\,}
+\newcommand{\sgeq}{\,{\geq}\,}
+\newcommand{\stimes}{\,{\times}\,}
+\newcommand{\sto}{\,{\to}\,}
+\newcommand{\sapprox}{\,{\approx}\,}
+\newcommand{\selem}{\,{\in}\,}
+\newcommand{\sdef}{\,{\coloneqq}\,}
+
+
+%%% ============= old =================
+%%% ------ rm ---------
+% \newcommand{\e}{\ensuremath\mathrm{e}}
+% \renewcommand{\i}{\ensuremath\mathrm{i}}
+% \newcommand{\id}{\ensuremath\mathrm{id}}
+% \DeclareMathOperator{\landauO}{\mathrm{O}}
+% \DeclareMathOperator{\landauo}{\mathrm{o}}
+\DeclareMathOperator{\Tr}{Tr}
+% \renewcommand{\Re}{\operatorname{Re}}
+% \renewcommand{\Im}{\operatorname{Im}}
+% \DeclareMathOperator{\ran}{ran}
+\DeclareMathOperator{\rank}{rank}
+% \DeclareMathOperator{\vecmap}{vec}
+% \DeclareMathOperator{\Pos}{Pos}
+% \DeclareMathOperator*{\argmin}{arg\,min}
+% \DeclareMathOperator{\supp}{supp}
+% \DeclareMathOperator{\diag}{diag}
+% \DeclareMathOperator{\spec}{spec}
+% \DeclareMathOperator{\dist}{dist}
+% \newcommand{\fro}{\mathrm{F}}
+% \renewcommand{\ker}{\operatorname{ker}}
+% \DeclareMathOperator{\cov}{\operatorname{cov}}
+% \DeclareMathOperator{\eig}{\operatorname{eig}}
+% \newcommand{\hc}{\mathrm{h.c.}}
+
+
+%%% ------ other ----------
+% \newcommand{\kw}[1]{\frac{1}{#1}}
+% \newcommand{\tkw}[1]{\tfrac{1}{#1}}
+\newcommand{\argdot}{{\,\cdot\,}}
+% \renewcommand{\vec}[1]{\mathbf{#1}}
+% \providecommand{\DC}{\operatorname{\mathscr{D}}} %descent cone
+% \newcommand{\ad}{^\dagger}%symbol for conjugate transpose
+% \renewcommand{\L}{\operatorname{\mathrm{L}}}%linear operators
+% \newcommand{\LL}{\operatorname{\mathbb{L}}}%linear maps on operators
+% % \newcommand{\M}{\operatorname{\mathbb{L}}}
+% \newcommand{\DM}{\operatorname{\mc{D}}}
+% \DeclareMathOperator{\Herm}{Herm}
+% \newcommand{\restr}{\upharpoonright}
+%\renewcommand{\ol}[1]{\overline{#1}}
+% \newcommand{\inner}[1]{\mathring{#1}}
+% \DeclareMathOperator{\dunion}{\uplus}%Disjoint union
+% \DeclareMathOperator{\dUnion}{\biguplus}%Disjoint union
+% \renewcommand{\complement}{^{c}}
+% \DeclareMathOperator{\colonequiv}{:\!\Leftrightarrow}
+
+
+%%% ------ norms, inner product ----------
+\newcommand{\norm}[1]{\left\Vert #1 \right\Vert} %norm with variable height
+\newcommand{\normn}[1]{\lVert #1 \rVert} %norm with normalsize height
+\newcommand{\normb}[1]{\bigl\Vert #1 \bigr\Vert} %norm with big height
+\newcommand{\normB}[1]{\Bigl\Vert #1 \Bigr\Vert} %norm with Big height
+\newcommand{\mnorm}[1]{\norm{#1}_{\max{}}} % max norm
+\newcommand{\mnormn}[1]{\normn{#1}_{\max{}}}
+\newcommand{\mnormb}[1]{\normb{#1}_{\max{}}}
+\newcommand{\mnormB}[1]{\normB{#1}_{\max{}}}
+\newcommand{\snorm}[1]{\norm{#1}_\infty} %spectral norm  =  (2->2)-norm
+\newcommand{\snormn}[1]{\normn{#1}_\infty}
+\newcommand{\snormb}[1]{\normb{#1}_\infty}
+\newcommand{\snormB}[1]{\normB{#1}_\infty}
+% \newcommand{\tnorm}[1]{\norm{#1}_{1}} %1 norm
+% \newcommand{\tnormn}[1]{\normn{#1}_{1}}
+% \newcommand{\tnormb}[1]{\normb{#1}_{1}}
+% \newcommand{\fnorm}[1]{\norm{#1}_\fro} %2 norm
+% \newcommand{\fnormn}[1]{\normn{#1}_\fro}
+% \newcommand{\fnormb}[1]{\normb{#1}_\fro}
+%\newcommand{\nnorm}[1]{\norm{#1}_\ast} %nuclear norm
+%\newcommand{\nnormn}[1]{\normn{#1}_\ast}
+%\newcommand{\nnormb}[1]{\normb{#1}_\ast}
+
+%%% ---- Kets -----
+\newcommand{\ket}[1]{\left.\left|{#1}\right.\right\rangle}
+\newcommand{\sket}[1]{\left.|{#1}\right.\rangle}
+\newcommand{\kett}[1]{\vert{#1}\rangle}
+\newcommand{\ketn}[1]{| #1 \rangle}
+\newcommand{\ketb}[1]{\bigl| #1 \bigr\rangle}
+\newcommand{\bra}[1]{\left.\left\langle{#1}\right.\right|}
+\newcommand{\bran}[1]{\langle #1 |}
+\newcommand{\braket}[2]{\left\langle #1 \middle| #2 \right\rangle}
+\newcommand{\braketn}[2]{\langle #1 \middle| #2 \rangle}
+\newcommand{\ketbra}[2]{\ket{#1} \!\! \bra{#2}}
+\newcommand{\ketibra}[3]{\ket{#1}_{#2} \!\! \bra{#3}}
+\newcommand{\ketbran}[2]{\ketn{#1} \! \bran{#2}}
+\newcommand{\sandwich}[3]
+  {\left\langle  #1 \right| #2 \left| #3 \right\rangle}
+\newcommand{\sandwichb}[3]
+  {\bigl\langle  #1 \bigr| #2 \bigl| #3 \bigr\rangle}
+%vacuum
+\newcommand\vac{{\ketbra{\emptyset}{\emptyset}}}
+\newcommand\vacbra{{\bra{\emptyset}}}
+\newcommand\vacket{{\ket{\emptyset}}}
+
+
+%%% ------ specific to this project ----------
+\newcommand{\ma}[1]{{m^{(1)}_{#1}}}
+\newcommand{\mb}[1]{{m^{(2)}_{#1}}}
+\newcommand{\ms}[1]{{m^{(\sigma)}_{#1}}}
+\newcommand{\gs}[2]{{i\ms{#1}\ms{#2}}}
+\DeclareMathAlphabet{\mathpzcc}{OT1}{pzc}{m}{it}
+\DeclareMathAlphabet{\mathpzc}{T1}{pzc}{m}{it}{\huge}
+\newcommand{\msp}{\phantom{-}}
+\newcommand{\m}{\operatorname{\gamma}}
+\newcommand{\mt}{\operatorname{\tilde{\gamma}}}
+\newcommand{\fe}{\operatorname{f}^{\phantom{\dagger}}}
+\newcommand{\ft}{\tilde{\operatorname{f}}^{\phantom{\dagger}}}
+\newcommand{\fd}{\operatorname{f}^\dagger}
+\newcommand{\ftd}{\tilde{\operatorname{f}}^\dagger}
+  \newcommand{\M} {\mathpzcc{m}}
+  \newcommand{\s}{ {|S|}}
+  \newcommand{\supp}{\mathrm{supp}}
+  \def\tildevac{\kett{\widetilde \emptyset}}
+\newcommand\Par[1][]{%
+  \ifstrempty{#1}{%
+    \mathcal P_\text{tot}
+  }{
+    \mathcal P_{#1}
+  }
+}
+\newcommand{\Ai}[1]{T^{(#1)}}
+\newcommand{\pentagon}{\tikz{
+\node[draw,regular polygon, regular polygon sides=5, inner sep=0pt,minimum size=8pt]at (0,0){};
+}}
+
+\newcommand{\pentapic}[1]{{\tikz{
+\node[name=P,draw,regular polygon, regular polygon sides=5, inner sep=0pt,minimum size=8pt]at (0,0){};
+\node[inner sep=0pt](P.center){\tiny $#1$}
+}}}
+\newcommand{\penta}[1]{\ket{\pentapic{#1}}}
+\def\pent{\ket{\pentagon}}
+\def\twopent{\pentapic 1,\pentapic 2}
+\def\twopentc{\pentapic 1 \times\pentapic 2}
+\def\JW{JW}
+\newcommand{\p}[1]{p^{(#1)}}
+\newcommand{\contr}[2]{C^{(#1\rightarrow #2)}_{i,j}}
+\def\psit{\ket{\Psi}}
+
+\newcommand\Pf[1]{\mathrm{Pf}\left(#1\right)}
+\def\fc{{\operatorname{f}^{(c)}}}
+\def\fct{{{\tilde \operatorname{f}}^{(c)}}}
+\def\fa{{\operatorname{f}^{(a)}}}
+\def\f{{\operatorname{f}^{(full)}}}
+\def\nUG{{ :U_G:}}
+\def\for{\quad\text{for}\quad}
+\def\and{\quad\text{and}\quad}
+\def\with{\quad\text{with}\quad}
+\def\where{\quad\text{where}\quad}
+\def\xor{\ \texttt{XOR}\ }
+\newcommand\nU[1]{ {: U_{#1} :}}
+\newcommand\BC[1]{ {\{0,1\}^{\times #1}}}
+\def\BCL{ \{0,1\}^{\times L}}
+\def\BCR{ \{0,1\}^{\times r}}
+\def\d{\text{d}}
+
