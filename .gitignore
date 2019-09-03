@@ -8,3 +8,5 @@
 *.gz
 
 Covariance matrix conversion/eop_covmatrix\.pdf
+
+.DS_Store
