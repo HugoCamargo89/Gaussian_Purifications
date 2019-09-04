@@ -170,13 +170,22 @@ These can be combined into one antisymmetric $2N \times 2N$ covariance matrix $\
 \Gamma_{j,k}(\psi) = \frac{\i\,}{2} \bra{\psi} [\m_j,\m_k]\ket \psi \ ,
 \end{equation}
 where the operators are defined via $\fe_k = \m_{2k-1} + \i \m_{2k}$ and  $\fd_k = \m_{2k-1} - \i \m_{2k}$.
-Each $2 \times 2$ block of $\Gamma$ can be related to the $F^k$ operators:
+Each $2 \times 2$ block of $\Gamma$, written in terms of submatrices $\Gamma^k$ as
 \begin{equation}
 \begin{aligned}
-\Gamma_{2j-1,2k-1} &= 2F^3_{j,k} + 2F^4_{j,k} \ ,&
-\Gamma_{2j-1,2k} &= \delta_{j,k} -2F^1_{j,k} - 2F^2_{j,k} \ ,\\
-\Gamma_{2j,2k-1} &= -\delta_{j,k} - 2 F^1_{j,k} + 2F^2_{j,k} \ ,&
-\Gamma_{2j,2k} &= -2F^3_{j,k} + 2F^4_{j,k} \ .
+\Gamma_{2j-1,2k-1} &= \Gamma^1_{j,k} \ ,&
+\Gamma_{2j-1,2k} &= \Gamma^2_{j,k} \ , &
+\Gamma_{2j,2k-1} &= \Gamma^3_{j,k} \ ,&
+\Gamma_{2j,2k} &= \Gamma^4_{j,k} \ ,
+\end{aligned}
+\end{equation}
+can be related to the $F^k$ operators:
+\begin{equation}
+\begin{aligned}
+\Gamma^1 &= 2F^3 + 2F^4 \ ,&
+\Gamma^2 &= \id_N -2F^1 - 2F^2 \ ,\\
+\Gamma^3 &= -\id_N - 2 F^1 + 2F^2 \ ,&
+\Gamma^4 &= -2F^3 + 2F^4 \ .
 \end{aligned}
 \end{equation}
 Before computing the covariance matrix, we fix the normalization:
@@ -284,12 +293,16 @@ F^4 &= \Im\left[(A^\dagger A + \id_N)^{-1}) \right] \ .
 The Majorana covariance matrix $\Gamma$ can then be constructed from the $F^k$:
 \begin{equation}
 \begin{aligned}
-\Gamma_{2j-1,2k-1} &= \Im\left[ 2(A + \id_N) (A^\dagger A + \id_N)^{-1} \right]_{j,k} \ ,&
-\Gamma_{2j-1,2k} &= \Re\left[ (A^\dagger A - 2A - \id_N) (A^\dagger A + \id_N)^{-1} \right]_{j,k} \ ,\\
-\Gamma_{2j,2k-1} &= \Re\left[ (-A^\dagger A - 2A + \id_N) (A^\dagger A + \id_N)^{-1} \right]_{j,k} \ ,&
-\Gamma_{2j,2k} &= \Im\left[ 2(-A + \id_N) (A^\dagger A + \id_N)^{-1} \right]_{j,k} \ .
+\Gamma^1 &= \Im\left[ 2(A + \id_N) (A^\dagger A + \id_N)^{-1} \right] \ ,&
+\Gamma^2 &= \Re\left[ (A^\dagger A - 2A - \id_N) (A^\dagger A + \id_N)^{-1} \right] \ ,\\
+\Gamma^3 &= \Re\left[ (-A^\dagger A - 2A + \id_N) (A^\dagger A + \id_N)^{-1} \right] \ ,&
+\Gamma^4 &= \Im\left[ 2(-A + \id_N) (A^\dagger A + \id_N)^{-1} \right] \ .
 \end{aligned}
 \end{equation}
-Note that if $A$ is real, all entries $\Gamma_{j,k}$ with even $j{+}k$ are zero.
+Note that if $A$ is real, the submatrices $\Gamma^1$ and $\Gamma^4$ are zero. We can invert this relationship to determine the generating matrix $A$ from the covariance matrix $\Gamma$ (or equivalently, the $F^k$), which leads to
+\begin{align}
+A &= (F^1 + \i F^3)(F^2 + \i F^4)^{-1} \\
+&=  ( -\Gamma^2 - \Gamma^3 + \i (\Gamma_1 - \Gamma_4) ) (2\, \id_N - \Gamma^2 + \Gamma^3 + \i (\Gamma_1 + \Gamma_4))^{-1} \ .
+\end{align}
 
 \end{document}
