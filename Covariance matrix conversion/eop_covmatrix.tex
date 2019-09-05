@@ -157,78 +157,152 @@ where $\vacket$ is the fermionic vacuum state vector and $1/\sqrt{Z}$ is a norma
 \end{equation}
 with $\mathrm{g}_k$ being an auxiliary Grassmann variables fulfilling $\{ g_j, \fd_k \} = 0$, $\intd g$ a Grassmann integration over these variables\footnote{A Grassmann integration $\intd{g_k}$ is simply defined by $\intd{g_j} g_k = \delta_{j,k}$, i.e., equivalent to a derivative.}, and $B$ an $M \times N$ matrix. In general, $0 \leq M \leq N$, and we can always ``gauge'' the matrices $A$ and $B$ so that $B A = 0$. 
 To define a fermionic covariance matrix for a state of the form \eqref{EQ_FERM_GAUSS_DEF}, we consider the four possible Hermitian operators quadratic in fermionic modes:
-\begin{align}
-F^1_{j,k} &= \frac{1}{2}\sandwich{\psi}{\fe_j \fe_k - \fd_j \fd_k}{\psi} \ , &
-F^2_{j,k} &= \frac{1}{2}\sandwich{\psi}{\fd_j \fe_k - \fe_j \fd_k}{\psi} \ , \\
-F^3_{j,k} &= \frac{1}{2}\sandwich{\psi}{\i(\fe_j \fe_k + \fd_j \fd_k)}{\psi}  \ , &
-F^4_{j,k} &= \frac{1}{2}\sandwich{\psi}{\i(\fd_j \fe_k + \fe_j \fd_k)}{\psi} \ .
-\end{align}
+\begin{equation}
+\begin{aligned}
+F^1_{j,k} &= \frac{1}{2}\sandwich{\psi}{\fd_j \fd_k - \fe_j \fe_k}{\psi} \ , &
+F^2_{j,k} &= \frac{1}{2}\sandwich{\psi}{\fe_j \fd_k + \fe_k \fd_j}{\psi} \ , \\
+F^3_{j,k} &= \frac{\i\,}{2}\sandwich{\psi}{\fd_j \fd_k + \fe_j \fe_k}{\psi}  \ , &
+F^4_{j,k} &= \frac{\i\,}{2}\sandwich{\psi}{\fe_j \fd_k - \fe_k \fd_j}{\psi} \ .
+\end{aligned}
+\end{equation}
 These can be combined into one antisymmetric $2N \times 2N$ covariance matrix $\Gamma$ of \emph{Majorana operators} $\m_k$,
 \begin{equation}
-\Gamma_{j,k}(\psi) =\bra{\psi}\tfrac{\i\,}{2} [\m_j,\m_k]\ket \psi \ ,
+\Gamma_{j,k}(\psi) = \frac{\i\,}{2} \bra{\psi} [\m_j,\m_k]\ket \psi \ ,
 \end{equation}
 where the operators are defined via $\fe_k = \m_{2k-1} + \i \m_{2k}$ and  $\fd_k = \m_{2k-1} - \i \m_{2k}$.
-Each $2 \times 2$ block of $\Gamma$ can be related to the $F^k$ operators:
+Each $2 \times 2$ block of $\Gamma$, written in terms of submatrices $\Gamma^k$ as
+\begin{equation}
+\begin{aligned}
+\Gamma_{2j-1,2k-1} &= \Gamma^1_{j,k} \ ,&
+\Gamma_{2j-1,2k} &= \Gamma^2_{j,k} \ , &
+\Gamma_{2j,2k-1} &= \Gamma^3_{j,k} \ ,&
+\Gamma_{2j,2k} &= \Gamma^4_{j,k} \ ,
+\end{aligned}
+\end{equation}
+can be related to the $F^k$ operators:
+\begin{equation}
+\begin{aligned}
+\Gamma^1 &= 2F^3 + 2F^4 \ ,&
+\Gamma^2 &= \id_N -2F^1 - 2F^2 \ ,\\
+\Gamma^3 &= -\id_N - 2 F^1 + 2F^2 \ ,&
+\Gamma^4 &= -2F^3 + 2F^4 \ .
+\end{aligned}
+\end{equation}
+Before computing the covariance matrix, we fix the normalization:
+\begin{equation}
+\braket{\psi}\psi = \frac{1}{Z} \vacbra \exp\left( \frac{1}{2} \sum_{j,k=1}^N A^\dagger_{j,k} \fe_j \fe_k \right) \exp\left( \frac{1}{2} \sum_{j,k=1}^N A_{j,k} \fd_j \fd_k \right) \vacket \overset{!}{=} 1 \ .
+\end{equation}
+We can resolve this operator product by rewriting it as a Grassmann integration over two set of Grassmann variables $E=(\eta_1,\eta_2,\dots,\eta_N)$ and $\Theta=(\theta_1,\theta_2,\dots,\theta_N)$ that replace the fermionic creation and annihilation operators, fulfilling $\{ \theta_j,\theta_k \} = \{ \eta_j,\eta_k \} =\{ \theta_j,\eta_k \} = 0$. This leads to the equation
 \begin{align}
-\Gamma_{2j-1,2k-1} &= F^3_{j,k} + F^4_{j,k} - F^3_{k,j} - F^4_{k,j} \ ,&
-\Gamma_{2j-1,2k} &= F^1_{j,k} + F^2_{j,k} - F^1_{k,j} - F^2_{k,j} \ ,\\
-\Gamma_{2j,2k-1} &= F^1_{j,k} - F^2_{j,k} - F^1_{k,j} + F^2_{k,j} \ ,&
-\Gamma_{2j,2k} &= -F^3_{j,k} + F^4_{j,k} + F^3_{k,j} - F^4_{k,j} \ .
-\end{align}
-
-To compute the covariance matrices, we first perform an orthogonal transformation on the fermionic modes,
-\begin{equation}
-\fe_j \to \ft_j = \sum_k W_{j,k} \fe_k \ ,
-\end{equation} 
-where $W \in U(N)$, so that the generating matrix becomes block-diagonal. Explicitly, $A = W^\dagger \Sigma W$ with
-\begin{equation}
-\Sigma = 
-\bigoplus_k
+Z &= \intd{E}\intd{\Theta} ( 1 + \Theta^\mathrm{T} E) \exp\left( \frac{1}{2} E^\mathrm{T} A^\dagger E + \frac{1}{2} \Theta^\mathrm{T} A \Theta \right) \nonumber\\
+&= \intd{E}\intd{\Theta}
+\exp\left[
+\frac{1}{2}
 \begin{pmatrix}
-0 & \lambda_k \\
--\lambda_k & 0
-\end{pmatrix}\ .
-\end{equation}
-If $N$ is odd, $\Sigma$ contains an additional all-zero row and column.
-This transformation is possible for any $A \in \mathbb{C}^{N \times N}$. This greatly simplifies the form of \eqref{EQ_FERM_GAUSS_DEF}, which now reads
-\begin{equation}
-\ket \psi = \frac{1}{\sqrt{Z}} \exp\left( \frac{1}{2} \sum_{j,k=1}^N \Sigma_{j,k} \ftd_j \ftd_k \right) \vacket 
-= \frac{1}{\sqrt{Z}} \prod_{k=1}^{N/2} \exp\left(\lambda_k \ftd_{2k-1} \ftd_{2k}\right) \vacket
-= \frac{1}{\sqrt{Z}} \prod_{k=1}^{N/2} \left(1 + \lambda_k \ftd_{2k-1} \ftd_{2k}\right) \vacket
-\ .
-\end{equation}
-Requiring normalized states $\braket{\psi}\psi = 1$ fixes the normalization as
-\begin{equation}
-Z = \prod_{k=1}^{N/2} \left(1 + |\lambda_k|^2\right)\ .
-\end{equation}
-We can now compute the covariance matrices $\tilde{F}^k$ in the transformed operators, which becomes a two-mode problem. Solving it yields
+E \\
+\Theta
+\end{pmatrix}^\mathrm{T}
+\begin{pmatrix}
+A^\dagger & \id_N \\
+-\id_N    & A
+\end{pmatrix}
+\begin{pmatrix}
+E \\
+\Theta
+\end{pmatrix}
+\right] \nonumber\\
+&= \sqrt{\det{
+\begin{pmatrix}
+-A^\dagger & -\id_N \\
+\id_N    & -A
+\end{pmatrix}}} \ ,
+\end{align}
+In order to compute covariance matrices, i.e., two-point functions in fermionic operators, we need to insert two Grassmann-valued source terms $I=(\iota_1,\iota_2,\dots,\iota_{N})$ and $K=(\kappa_1,\kappa_2,\dots,\kappa_{N})$  into the partition function:
 \begin{align}
-\tilde{F}^1 &= 
-\bigoplus_k
+Z[I,K] &= \intd{E}\intd{\Theta}
+\exp\left[
+\frac{1}{2}
 \begin{pmatrix}
-0 & \Re(\lambda_k)/(1 + |\lambda_k|^2) \\
--\Re(\lambda_k)/(1 + |\lambda_k|^2) & 0
-\end{pmatrix}\ , \\
-\tilde{F}^2 &= 
-\bigoplus_k
+E \\
+\Theta
+\end{pmatrix}^\mathrm{T}
 \begin{pmatrix}
-(1 - |\lambda_k|^2)/(1 + |\lambda_k|^2) & 0 \\
-0 & (1 - |\lambda_k|^2)/(1 + |\lambda_k|^2)
-\end{pmatrix}\ ,\\
-\tilde{F}^3 &= 
-\bigoplus_k
+A^\dagger & \id_N \\
+-\id_N    & A
+\end{pmatrix}
 \begin{pmatrix}
-0 & \Im(\lambda_k)/(1 + |\lambda_k|^2) \\
--\Im(\lambda_k)/(1 + |\lambda_k|^2) & 0
-\end{pmatrix}\ , \\
-\tilde{F}^4 &= 
-\bigoplus_k
+E \\
+\Theta
+\end{pmatrix} 
+\,+\, 
 \begin{pmatrix}
-1 & 0 \\
-0 & 1
-\end{pmatrix}\ .
+E \\
+\Theta
+\end{pmatrix}^\mathrm{T}
+\begin{pmatrix}
+I \\
+K 
+\end{pmatrix}
+\right] \nonumber\\
+&= Z \exp\left(\frac{1}{2} \begin{pmatrix}
+I \\
+K 
+\end{pmatrix}^\mathrm{T}
+\begin{pmatrix}
+A^\dagger & \id_N \\
+-\id_N    & A
+\end{pmatrix}^{-1}
+\begin{pmatrix}
+I \\
+K 
+\end{pmatrix}
+\right)  \nonumber\\
+&=
+Z \exp\left(
+\frac{1}{2} 
+\begin{pmatrix}
+I \\
+K 
+\end{pmatrix}^\mathrm{T}
+\begin{pmatrix}
+A (A^\dagger A + \id_N)^{-1} & -(A A^\dagger + \id_N)^{-1} \\
+(A A^\dagger + \id_N)^{-1}  & A^\dagger (A A^\dagger + \id_N)^{-1}
+\end{pmatrix}^{-1}
+\begin{pmatrix}
+I \\
+K 
+\end{pmatrix}
+\right) \ .
 \end{align}
-To revert to the original fermionic operators, we then simply compute $F=W^\dagger \tilde{F} W$ and $G=W^\dagger \tilde{G} W$.
-
+We can now explicitly compute fermionic observables, such as
+\begin{align}
+F^1_{j,k} &= \frac{1}{2}\sandwich{\psi}{\fd_j \fd_k - \fe_j \fe_k}{\psi} = \frac{1}{Z} \left[  \frac{\partial^2 Z[I,K]}{\partial\kappa_j\partial\kappa_k} - \frac{\partial^2 Z[I,K]}{\partial\iota_j\partial\iota_k} \right]_{I=K=0} \nonumber\\
+&= \frac{1}{2}\left( A (A^\dagger A + \id_N)^{-1} - A^\dagger (A A^\dagger + \id_N)^{-1}\right)_{j,k} \nonumber\\
+&= \Re\left[ A (A^\dagger A + \id_N)^{-1} \right]_{j,k} \ .
+\end{align}
+Note the change in sign due to anticommutativity of the partial derivatives.
+Using this approach, we determine all observables $F^k$ to be 
+\begin{equation}
+\begin{aligned}
+F^1 &= \Re\left[ A (A^\dagger A + \id_N)^{-1} \right] \ , &
+F^2 &= \Re\left[(A^\dagger A + \id_N)^{-1}) \right] \ , \\
+F^3 &= \Im\left[ A (A^\dagger A + \id_N)^{-1} \right] \ , &
+F^4 &= \Im\left[(A^\dagger A + \id_N)^{-1}) \right] \ .
+\end{aligned}
+\end{equation}
+The Majorana covariance matrix $\Gamma$ can then be constructed from the $F^k$:
+\begin{equation}
+\begin{aligned}
+\Gamma^1 &= \Im\left[ 2(A + \id_N) (A^\dagger A + \id_N)^{-1} \right] \ ,&
+\Gamma^2 &= \Re\left[ (A^\dagger A - 2A - \id_N) (A^\dagger A + \id_N)^{-1} \right] \ ,\\
+\Gamma^3 &= \Re\left[ (-A^\dagger A - 2A + \id_N) (A^\dagger A + \id_N)^{-1} \right] \ ,&
+\Gamma^4 &= \Im\left[ 2(-A + \id_N) (A^\dagger A + \id_N)^{-1} \right] \ .
+\end{aligned}
+\end{equation}
+Note that if $A$ is real, the submatrices $\Gamma^1$ and $\Gamma^4$ are zero. We can invert this relationship to determine the generating matrix $A$ from the covariance matrix $\Gamma$ (or equivalently, the $F^k$), which leads to
+\begin{align}
+A &= (F^1 + \i F^3)(F^2 + \i F^4)^{-1} \\
+&=  ( -\Gamma^2 - \Gamma^3 + \i (\Gamma_1 - \Gamma_4) ) (2\, \id_N - \Gamma^2 + \Gamma^3 + \i (\Gamma_1 + \Gamma_4))^{-1} \ .
+\end{align}
 
 \end{document}
