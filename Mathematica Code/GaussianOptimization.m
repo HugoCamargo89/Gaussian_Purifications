@@ -69,6 +69,7 @@ GOSpBasisNoUN::usage="spBasisNoUN[N] generates Sp(2N,R)/U(N) Lie algebra basis i
 GOSpBasisNoU1::usage="spBasisNoU1[N] generates Sp(2N,R)/U(1\!\(\*SuperscriptBox[\()\), \(N\)]\) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
 GOOBasis::usage="OBasis[N] generates O(2N,R) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
 GOSpBasisNoSp::usage="GOSpBasisNoSp[\!\(\*SubscriptBox[\(N\), \(A\)]\),\!\(\*SubscriptBox[\(N\), \(B\)]\)] generates the compound Lie algebra basis sp(2(\!\(\*SubscriptBox[\(N\), \(A\)]\)+\!\(\*SubscriptBox[\(N\), \(B\)]\)),R)/sp(2\!\(\*SubscriptBox[\(N\), \(A\)]\),R) x sp(2\!\(\*SubscriptBox[\(N\), \(B\)]\),R)";
+GOEmptyLieAlgebra::usage="GOSpBasisNoSp[\!\(\*SubscriptBox[\(N\), \(A\)]\),\!\(\*SubscriptBox[\(N\), \(B\)]\)] generates the compound Lie algebra basis sp(2(\!\(\*SubscriptBox[\(N\), \(A\)]\)+\!\(\*SubscriptBox[\(N\), \(B\)]\)),R)/sp(2\!\(\*SubscriptBox[\(N\), \(A\)]\),R) x sp(2\!\(\*SubscriptBox[\(N\), \(B\)]\),R)";
 
 
 GOMetricSp::usage="GOMetricSp[K,\!\(\*SubscriptBox[\(J\), \(0\)]\)] generates the natural metric for the symplectic manifold with Lie basis K, for an initial state \!\(\*SubscriptBox[\(J\), \(0\)]\)";
@@ -200,8 +201,9 @@ GOinvMSp[m_,Mform_:"qpqp"]:=Module[{\[CapitalOmega]}, \[CapitalOmega]=ToExpressi
 
 
 (* Lie algebra bases *)
-GOSpBasis[dim1_,dim2_]:=Module[{n,SYM,ASYM,notK,Tr,Trtran},
-	n=dim1+dim2;
+
+(* Generates the Lie algebra of Sp(2n,R) *)
+GOSpBasis[n_]:=Module[{SYM,ASYM,notK,Tr,Trtran},
 	SYM=Flatten[Table[SparseArray[{{i,j}->If[i!=j,N[1/Sqrt[2]],1],{j,i}->If[i!=j,N[1/Sqrt[2]],1]},{n,n}],{i,1,n},{j,i,n}],1];
 	ASYM=Flatten[Table[SparseArray[{{i,j}->N[1/Sqrt[2]],{j,i}->-N[1/Sqrt[2]]},{n,n}],{i,1,n},{j,i+1,n}],1];
 	notK=Join[
@@ -212,20 +214,21 @@ GOSpBasis[dim1_,dim2_]:=Module[{n,SYM,ASYM,notK,Tr,Trtran},
 	Tr=GOqpqpFROMqqpp[n];
 Return[Table[Tr.Ki.Transpose[Tr],{Ki,notK}]]]
 
-GOSpBasisNoUN[dim1_,dim2_]:=Module[{n,Kold},
-	n=dim1+dim2;
+(* Generates the subspace of the Lie algebra of Sp(2n,R) where we remove the u(n) sub algebra*)
+GOSpBasisNoUN[n_]:=Module[{Kold},
 	Kold=GOSpBasis[n];
 Return[Table[If[SymmetricMatrixQ[old],old],{old,Kold}]//DeleteCases[#,Null]&]]
 
-GOSpBasisNoU1[dim1_,dim2_]:=Module[{N,Kold,notK1,notK2,Knew},
-	N=dim1+dim2;
-	Kold=GOSpBasis[N];
+(* Generates the subspace of the Lie algebra of Sp(2n,R) where we remove u(1)^n *)
+GOSpBasisNoU1[n_]:=Module[{N,Kold,notK1,notK2,Knew},
+	Kold=GOSpBasis[n];
 	notK1=Table[If[SymmetricMatrixQ[old]==False,old],{old,Kold}]//DeleteCases[#,Null]&;
 	notK2=Table[If[Length[notK["NonzeroValues"]]==2,notK],{notK,notK1}]//DeleteCases[#,Null]&;
 Return[DeleteCases[Kold,Alternatives@@notK2]]];
 
+(* Generates the subspace of the Lie algebra of Sp(2dim1+2dim2,R) where we remove the subalgebras Sp(2dim1,R) and Sp(2dim2,R) *)
 GOSpBasisNoSp[dim1_,dim2_]:=Module[{FullBasis,Indices1,Indices2,Indices,MQ2,MQ3,CheckM,CheckList},
-	FullBasis=GOSpBasis[dim1,dim2];
+	FullBasis=GOSpBasis[dim1+dim2];
 	Indices1=Range[2dim1];Indices2=Range[2dim1+1,2(dim1+dim2)];
 
 	MQ2[M_]:=M[[Indices1,Indices2]];MQ3[M_]:=M[[Indices2,Indices1]];
@@ -235,37 +238,60 @@ GOSpBasisNoSp[dim1_,dim2_]:=Module[{FullBasis,Indices1,Indices2,Indices,MQ2,MQ3,
 	CheckList=CheckM/@FullBasis; Indices=Position[CheckList,False]//Flatten;
 	FullBasis[[Indices]]];
 
-GOOBasis[dim1_,dim2_]:=Module[{n,notK,Tr,Trtran},
-	n=dim1+dim2;
+(* Generates the Lie algebra of O(2n) *)
+GOOBasis[n_]:=Module[{notK,Tr,Trtran},
 	notK=Flatten[Table[SparseArray[{{i,j}->1,{j,i}->-1},{2n,2n}],{i,1,2n},{j,i+1,2n}],1];
 	Tr=GOqpqpFROMqqpp[n];
 Return[Table[Tr.Ki.Transpose[Tr],{Ki,notK}]]];
 
+(* Generates the empty Lie algebra of n degrees of freedom, i.e, a list containing a single zero 2n by 2n matrix *)
+GOEmptyLieAlgebra[n_]:={ConstantArray[0,{2n,2n}]};
+
 (* Generating compound basis *)
-GOCompoundBasis[{basisA_, basisB_}, {dimA1_,dimA2_,dimB1_,dimB2_}]:=Module[{dim,dimA,dimB,KA,KB,K},
-	dimA=dimA1+dimA2; dimB=dimB1+dimB2; dim=2(dimA+dimB);
-			
-	(* Generate Lie algebra basis *)
-	KA=ToExpression[basisA][dimA1,dimA2]; KB=ToExpression[basisB][dimB1,dimB2];
-	K=Which[
-		(* Case 1: Only B is varied *)
-		basisA=="None", Table[PadLeft[Ki,{dim,dim}],{Ki,KB}],
-			
-		(* Case 2: Only A is varied *)
-		basisB=="None", Table[PadRight[Ki,{dim,dim}],{Ki,KA}],
-			
-		(* Case 3: Both A and B are varied *)
-		True, Table[ArrayFlatten[{{KAi,0},{0,KBi}}],{KAi,KA},{KBi,KB}]
-		];
+GOCompoundBasis[VecOfLieAlgebra_]:=Module[{NumberOfLieAlgebras,VecOfDim,VecOfEnlarged,TotalDim,Ktotal,FirstDim},
+	NumberOfLieAlgebras=Length[VecOfLieAlgebra];
+	VecOfDim=Length[#[[1]]]&/@VecOfLieAlgebra;
+	TotalDim=Total[VecOfDim];
+	
+	VecOfEnlarged=Table[
+	Which[
+	
+	(* Case 1: Only one component (kind of pointless, but ok)*)
+	NumberOfLieAlgebras==1,VecOfLieAlgebra[1],
+	
+	(* Case 2: First, Lie algebra*)
+	i==1, If[VecOfLieAlgebra[[i,1]]==ConstantArray[0,{VecOfDim[[i]],VecOfDim[[i]]}],{},
+			Table[ArrayFlatten[({
+ {Ki, 0},
+ {0, ConstantArray[0,{TotalDim-VecOfDim[[i]],TotalDim-VecOfDim[[i]]}]}
+})],{Ki,VecOfLieAlgebra[[i]]}]
+			],
+	i==NumberOfLieAlgebras,If[VecOfLieAlgebra[[i,1]]==ConstantArray[0,{VecOfDim[[i]],VecOfDim[[i]]}],{},
+			Table[ArrayFlatten[({
+ {ConstantArray[0,{TotalDim-VecOfDim[[i]],TotalDim-VecOfDim[[i]]}], 0},
+ {0, Ki}
+})],{Ki,VecOfLieAlgebra[[i]]}]
+			],
+	True,If[VecOfLieAlgebra[[i,1]]==ConstantArray[0,{VecOfDim[[i]],VecOfDim[[i]]}],{},
+			FirstDim=Total[VecOfDim[[1;;i-1]]];
+			Table[ArrayFlatten[({
+ {ConstantArray[0,{FirstDim,FirstDim}], 0, 0},
+ {0, Ki, 0},
+ {0, 0, ConstantArray[0,{TotalDim-VecOfDim[[i]]-FirstDim,TotalDim-VecOfDim[[i]]-FirstDim}]}
+})],{Ki,VecOfLieAlgebra[[i]]}]
+			]
 		
-	K=If[dimB==0, KA, K];
-	Return[K]];
+	],{i,1,NumberOfLieAlgebras}];
+	
+
+	Ktotal=SparseArray/@Flatten[VecOfEnlarged,1];
+	Return[Ktotal]];
 
 
 (* Natural metrics *)
 GOMetricSp[LieBasis_,J0_]:=Module[{G0,invG0},
 	G0=J0.GO\[CapitalOmega]qpqp[Length[J0]/2]; invG0=Inverse[G0];
-	Table[Tr[K1.K2+K1.G0.Transpose[K2].invG0+G0.Transpose[K1].invG0.K2+Transpose[K2.K1]],{K1,LieBasis},{K2,LieBasis}]//SparseArray];
+	Table[Tr[2K1.K2+2K1.G0.Transpose[K2].invG0],{K1,LieBasis},{K2,LieBasis}]//SparseArray];
 
 GOMetricO[LieBasis_]:=IdentityMatrix[Length[LieBasis]]//SparseArray;
 
@@ -278,14 +304,14 @@ GOOptimize[
 {function_, gradfunction_}, 
 
 (* System-specific input arguments *)
-{J0_, M0_, K_, metric_},
+{J0_, M0_, K_,metric_, newM_},
 
 (* Process-specific input arguments *)
 {gradtol_, Etol_, steplimit_:\[Infinity], stepcorrection_, trackall_:False}]:=
 
 	Module[{G0, invG0, (* Initial covariance matrix *)
 			Mold, Mnew, Eold, Enew,(* Updating function values *)
-			grad, Normgrad, X, \[Epsilon], GenerateM, invmetric, newM, (* Movement *)
+			grad, Normgrad, X, \[Epsilon], GenerateM, invmetric, (* Movement *)
 			M0list, Elist, Normlist, diffE, diffNorm, (* Tracking values *)
 			stepcount, dimM0, CorrList, order1, order2, order, keepnumber, loosenumber, donelist, stopreason,(* Tracking trajectories *) 
 			resultIndex, doneE, doneElist, doneM, doneNorm, FinalE, FinalM, FinalElist, FinalNormlist}, (* Results *)
@@ -293,7 +319,6 @@ GOOptimize[
 		dimM0=Length[M0]; CorrList=List[]; M0list=M0; donelist=List[]; Elist=List[];
 		
 		(* Sub-rountine for step size - this definition is always the same but depends on the stepcorrection function *)
-		newM[m_,s_,x_]:=m.GOapproxExp[s,x];
 		GenerateM[\[Epsilon]_,Mold_,Mnew_,Eold_,Enew_,X_]:=Module[{s=\[Epsilon], enew=Enew, corr=0, mnew=Mnew},
 			While[enew>Eold, s=stepcorrection[s]; corr++; mnew=newM[Mold,s,X]; enew=function[mnew,J0];]; AppendTo[CorrList,corr]; Return[{mnew//SparseArray,enew}]];
 			
@@ -303,8 +328,10 @@ GOOptimize[
 		(* --------Iteration-------- *)
 		
 		(* Define function values and gradient for initial values *) 
-		Mold=M0; Eold=function[#,J0]&/@Mold; {grad,Normgrad,X}=(gradfunction[#,J0,K,invmetric]&/@Mold)//Transpose; 
-	
+		Mold=M0; Eold=function[#,J0]&/@Mold; {grad,Normgrad,X}=(gradfunction[#,J0,K,invmetric]&/@Mold)//Transpose;
+		
+		Print[Eold]; (*Lucas: Why print it here?*)
+		
 		Elist={Eold}//Transpose; Normlist={Normgrad}//Transpose; diffE=Eold; diffNorm=Normgrad; 
 		
 		(* Initialise step count *)
@@ -343,7 +370,7 @@ GOOptimize[
 			If[keepnumber>1,order=Join[Take[order1,keepnumber],Take[order2,keepnumber]],order=Take[order1,keepnumber]];
 			
 			{Mold, Eold, grad, Normgrad, X, M0list, Elist, Normlist, diffE, diffNorm}=(#[[order]])&/@{Mold, Eold, grad, Normgrad, X, M0list, Elist, Normlist, diffE, diffNorm}; dimM0=Length[order];	
-			];			
+			];
 		];
 	
 	(* Check overall stopping criteria *)
@@ -388,7 +415,7 @@ GOExtractStdFormG[G_]:=Module[{NT=Dimensions[G][[1]]/2,\[CapitalOmega]T,J,RI,SWT
 
 GOExtractStdForm\[CapitalOmega][\[CapitalOmega]_]:=Module[{tuples,selecttuples,values,vectors,g,invg,Mtra,rlist},
 	tuples=Eigensystem[\[CapitalOmega]]//Transpose;
-	selecttuples=Select[tuples,Im[#][[1]]>0&]//Chop;
+	selecttuples=Select[tuples,Im[#][[1]]>=0&]//Chop;
 	{values,vectors}=selecttuples//Transpose;
 	g=vectors.ConjugateTranspose[vectors]//Chop;
 	invg=MatrixPower[Inverse[g],1/2];
@@ -458,7 +485,6 @@ GOEoPFerm[ResAA_]:=Function[{M,J0}, Module[{n,D,logD},
 	D=(M.(IdentityMatrix[n]+I J0).Inverse[M]/2)[[ResAA,ResAA]];
 	logD=GOConditionalLog[D];
 	Re[-Tr[D.logD]]//Chop]];
-	
 GOEoPgradBos[ResAA_]:=Function[{M,J0,K,invmetric},Module[{n,nn,invM,dJ,D,dD,logDD,grad,Normgrad,X},
 	n=Length[J0];
 	invM=GOinvMSp[M];
@@ -469,6 +495,17 @@ GOEoPgradBos[ResAA_]:=Function[{M,J0,K,invmetric},Module[{n,nn,invM,dJ,D,dD,logD
 	grad=invmetric.Table[Re[1/2 Tr[dDi.logDD]]//Chop,{dDi,dD}];
 	Normgrad=Norm[grad]; X=-grad.K/Normgrad;
 	{grad,Normgrad,X//SparseArray}]];
+(*GOEoPgradBos[ResAA_]:=Function[{M,J0,K,invmetric},Module[{n,nn,invM,dJ,D,dD,logDD,grad,Normgrad,X,metric,metricinv},
+	n=Length[J0];
+	invM=GOinvMSp[M];
+	dJ=Table[KIi.M.J0.invM-M.J0.invM.KIi,{KIi,K}];
+	dD=Table[I/2 dJAAi[[ResAA,ResAA]],{dJAAi,dJ}];
+	D=(M.(IdentityMatrix[n]+I J0).invM/2)[[ResAA,ResAA]];
+	logDD=GOConditionalLog[D.D];
+	metric=GOMetricSp[K,J0];
+	grad=metricinv.Table[Re[1/2 Tr[dDi.logDD]]//Chop,{dDi,dD}];
+	Normgrad=Norm[grad]; X=-grad.K/Normgrad;
+	{grad,Normgrad,X//SparseArray}]];*)
 GOEoPgradFerm[ResAA_]:=Function[{M,J0,K,invmetric},Module[{n,nn,invM,KI,dJ,D,dD,logD,grad,Normgrad,X},
 	n=Length[J0]; nn=Length[J0];
 	invM=Inverse[M];
