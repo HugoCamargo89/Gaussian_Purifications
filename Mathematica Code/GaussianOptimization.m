@@ -8,11 +8,95 @@ BeginPackage["GaussianOptimization`"];
 
 
 (* Optimization algorithm *)
-GOOptimize::usage="{ \!\(\*SubscriptBox[\(F\), \(final\)]\) , \!\(\*SubscriptBox[\(M\), \(final\)]\) , \!\(\*SubscriptBox[\(N\), \(corrections\)]\) , {F} , {all F} , {|\[Del]|} }=GOOptimize[ProblemSpecific,SystemSpecific,ProcedureSpecific]
+GOOptimize::usage="The function GOOptimize[ProblemSpecific,SystemSpecific,ProcedureSpecific] provides a general gradient descent optimization algorithm and sits at the core of the GO package.
 
-ProblemSpecific={f,df} 
-SystemSpecific={\!\(\*SubscriptBox[\(J\), \(0\)]\),\!\(\*SubscriptBox[\(listM\), \(0\)]\),K,G}
-ProcedureSpecific={\!\(\*SubscriptBox[\(tol\), \(F\)]\),\!\(\*SubscriptBox[\(tol\), \(\[Del]\)]\),\!\(\*SubscriptBox[\(lim\), \(iterations\)]\),step size sub-routine,track all trajectories?}";
+{FinalF,FinalM,CorrList,FinalFlist,Flists,FinalNormlist}=GOOptimize[ProblemSpecific,SystemSpecific,ProcedureSpecific]
+
+\!\(\*
+StyleBox[\"The\",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\" \",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\"input\",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\" \",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\"consists\",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\" \",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\"of\",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\" \",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\"the\",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\" \",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\"following\",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\" \",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\"pieces\",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\":\",\nFontWeight->\"Bold\"]\)
+ProblemSpecific={\!\(\*
+StyleBox[\"F\",\nFontWeight->\"Bold\"]\),\!\(\*
+StyleBox[\"dF\",\nFontWeight->\"Bold\"]\)}
+	\!\(\*
+StyleBox[\"F\",\nFontWeight->\"Bold\"]\) represents the function to be minimized
+	\!\(\*
+StyleBox[\"dF\",\nFontWeight->\"Bold\"]\) represents the gradient function of f
+SystemSpecific={\!\(\*
+StyleBox[\"J0\",\nFontWeight->\"Bold\"]\),\!\(\*
+StyleBox[\"listM0\",\nFontWeight->\"Bold\"]\),\!\(\*
+StyleBox[\"KK\",\nFontWeight->\"Bold\"]\),\!\(\*
+StyleBox[\"geometry\",\nFontWeight->\"Bold\"]\)}
+	\!\(\*
+StyleBox[\"J0\",\nFontWeight->\"Bold\"]\) represents a reference point
+	\!\(\*
+StyleBox[\"listM0\",\nFontWeight->\"Bold\"]\) represents a list of starting points, i.e., of transformations from the reference point J0
+	\!\(\*
+StyleBox[\"KK\",\nFontWeight->\"Bold\"]\) represents a local basis of tangent space (e.g. subspace of Lie algebra)
+	\!\(\*
+StyleBox[\"geometry\",\nFontWeight->\"Bold\"]\) represents a local notion of geometry (e.g. metric) with respect to KK
+ProcedureSpecific={\!\(\*
+StyleBox[\"tolF\",\nFontWeight->\"Bold\"]\),\!\(\*
+StyleBox[\"tolgrad\",\nFontWeight->\"Bold\"]\),\!\(\*
+StyleBox[\"steplimit\",\nFontWeight->\"Bold\"]\),\!\(\*
+StyleBox[\"stepsizefunction\",\nFontWeight->\"Bold\"]\),\!\(\*
+StyleBox[\"trackall\",\nFontWeight->\"Bold\"]\)}
+	\!\(\*
+StyleBox[\"tolF\",\nFontWeight->\"Bold\"]\) represents the stopping tolerance of the function value of F
+	\!\(\*
+StyleBox[\"tolgrad\",\nFontWeight->\"Bold\"]\) represents the stopping tolerance of the gradient norm of dF
+	\!\(\*
+StyleBox[\"steplimit\",\nFontWeight->\"Bold\"]\) represents a maximal number of steps (typically, we choose \[Infinity])
+	\!\(\*
+StyleBox[\"trackall\",\nFontWeight->\"Bold\"]\) is an option to track all trajectories starting from listM0 instead of dropping some
+
+\!\(\*
+StyleBox[\"The\",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\" \",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\"output\",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\" \",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\"consists\",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\" \",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\"of\",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\" \",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\"the\",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\" \",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\"following\",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\" \",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\"pieces\",\nFontWeight->\"Bold\"]\)\!\(\*
+StyleBox[\":\",\nFontWeight->\"Bold\"]\)
+{\!\(\*
+StyleBox[\"FinalF\",\nFontWeight->\"Bold\"]\),\!\(\*
+StyleBox[\"FinalM\",\nFontWeight->\"Bold\"]\),\!\(\*
+StyleBox[\"CorrList\",\nFontWeight->\"Bold\"]\),\!\(\*
+StyleBox[\"FinalFlist\",\nFontWeight->\"Bold\"]\),\!\(\*
+StyleBox[\"Flists\",\nFontWeight->\"Bold\"]\),\!\(\*
+StyleBox[\"FinalNormlist\",\nFontWeight->\"Bold\"]\)}
+	\!\(\*
+StyleBox[\"FinalF\",\nFontWeight->\"Bold\"]\) represents the final function value of F
+	\!\(\*
+StyleBox[\"FinalM\",\nFontWeight->\"Bold\"]\) represents the final transformation from J0 to the final state
+	\!\(\*
+StyleBox[\"CorrList\",\nFontWeight->\"Bold\"]\) lists the number of stepsize corrections at each step of the final trajectory
+	\!\(\*
+StyleBox[\"FinalFlists\",\nFontWeight->\"Bold\"]\) lists the successive function values in the optimal trajectory
+	\!\(\*
+StyleBox[\"Flists\",\nFontWeight->\"Bold\"]\) lists all successive function values for all trajectories (Lucas: is that right?)
+	\!\(\*
+StyleBox[\"FinalNormlist\",\nFontWeight->\"Bold\"]\) lists the successive gradient norms in the optimal trajectory
+";
 
 
 (* Symplectic forms / Covariance matrices *)
@@ -57,26 +141,26 @@ GORandomTransformation::usage="GORandomTransformation[n,'Basis'] generates a ran
 
 
 (* Tools for computational efficiency *)
-GOapproxExp::usage="approxExp[\[Epsilon],K]=(1 + \[Epsilon]/2 K)/(1 - \[Epsilon]/2 K) approximates MatrixExponential[\[Epsilon]X]";
-GOlogfunction::usage="logfunction[x] takes value 0 when x=0 and log[x] otherwise";
+GOapproxExp::usage="GOapproxExp[\[Epsilon],K]=(1 + \[Epsilon]/2 K)/(1 - \[Epsilon]/2 K) approximates MatrixExponential[\[Epsilon]X]";
+GOlogfunction::usage="GOlogfunction[x] takes value 0 when x=0 and log[x] otherwise";
 GOConditionalLog::usage="GOConditionalLog[x] calculates MatrixLog[x] by applying logfunction to the eigenvalues of x";
-GOinvMSp::usage="invMSp[m,'Mform'] inverts a symplectic matrix m in the basis Mform as \!\(\*SuperscriptBox[\(m\), \(-1\)]\)=-\[CapitalOmega]m\[CapitalOmega]";
+GOinvMSp::usage="GOinvMSp[m,'Mform'] inverts a symplectic matrix m in the basis Mform as \!\(\*SuperscriptBox[\(m\), \(-1\)]\)=-\[CapitalOmega]m\[CapitalOmega]";
 
 
 (* Lie algebra bases *)
-GOSpBasis::usage="SpBasis[N] generates Sp(2N,R) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
-GOSpBasisNoUN::usage="spBasisNoUN[N] generates Sp(2N,R)/U(N) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
-GOSpBasisNoU1::usage="spBasisNoU1[N] generates Sp(2N,R)/U(1\!\(\*SuperscriptBox[\()\), \(N\)]\) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
-GOOBasis::usage="OBasis[N] generates O(2N,R) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
-GOSpBasisNoSp::usage="GOSpBasisNoSp[\!\(\*SubscriptBox[\(N\), \(A\)]\),\!\(\*SubscriptBox[\(N\), \(B\)]\)] generates the compound Lie algebra basis sp(2(\!\(\*SubscriptBox[\(N\), \(A\)]\)+\!\(\*SubscriptBox[\(N\), \(B\)]\)),R)/sp(2\!\(\*SubscriptBox[\(N\), \(A\)]\),R) x sp(2\!\(\*SubscriptBox[\(N\), \(B\)]\),R)";
-GOEmptyLieAlgebra::usage="GOSpBasisNoSp[\!\(\*SubscriptBox[\(N\), \(A\)]\),\!\(\*SubscriptBox[\(N\), \(B\)]\)] generates the compound Lie algebra basis sp(2(\!\(\*SubscriptBox[\(N\), \(A\)]\)+\!\(\*SubscriptBox[\(N\), \(B\)]\)),R)/sp(2\!\(\*SubscriptBox[\(N\), \(A\)]\),R) x sp(2\!\(\*SubscriptBox[\(N\), \(B\)]\),R)";
+GOLieBasisSp::usage="GOLieBasisSp[N] generates Sp(2N,R) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
+GOLieBasisSpNoUN::usage="GOLieBasisSpNoUN[N] generates Sp(2N,R)/U(N) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
+GOLieBasisSpNoU1::usage="GOLieBasisSpNoU1[N] generates Sp(2N,R)/U(1\!\(\*SuperscriptBox[\()\), \(N\)]\) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
+GOLieBasisSpMixing::usage="GOLieBasisSpMixing[\!\(\*SubscriptBox[\(N\), \(A\)]\),\!\(\*SubscriptBox[\(N\), \(B\)]\)] generates the compound Lie algebra basis sp(2(\!\(\*SubscriptBox[\(N\), \(A\)]\)+\!\(\*SubscriptBox[\(N\), \(B\)]\)),R)/sp(2\!\(\*SubscriptBox[\(N\), \(A\)]\),R) x sp(2\!\(\*SubscriptBox[\(N\), \(B\)]\),R)";
+GOLieBasisSO::usage="GOLieBasisSO[N] generates O(2N,R) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
+GOLieBasisEmpty::usage="GOLieBasisEmpty[N] constructs the empty Lie basis given by a list containing a single 2N by 2N matrix with zero entries. It can be used to construct a compound basis using GOLieBasisCompound.";
+
+
+GOLieBasisCompound::usage="GOCompoundBasis[{LieAlgebra1,LieAlgebra2,...,LieAlgebraN}] creates the space spanned by different Lie algebra spaces collected in a vector {LieAlgebra1,LieAlgebra2,...,LieAlgebraN}. For degrees of freedom without changes, we should include GOLieAlgebraEmpty[n].";
 
 
 GOMetricSp::usage="GOMetricSp[K,\!\(\*SubscriptBox[\(J\), \(0\)]\)] generates the natural metric for the symplectic manifold with Lie basis K, for an initial state \!\(\*SubscriptBox[\(J\), \(0\)]\)";
 GOMetricO::usage="GOMetricO[K,\!\(\*SubscriptBox[\(J\), \(0\)]\)] generates the natural metric for the orthogonal manifold with Lie basis K";
-
-
-GOCompoundBasis::usage="GOCompoundBasis[{'basisA','basisB'},{dimA,dimB}] generates a compound Lie algebra basis with basis 'basisA' in subsystem A with dimA degrees of freedom and equivalently for subsystem B, in the basis qpqp";
 
 
 (* Purifications and the standard form *)
@@ -203,7 +287,7 @@ GOinvMSp[m_,Mform_:"qpqp"]:=Module[{\[CapitalOmega]}, \[CapitalOmega]=ToExpressi
 (* Lie algebra bases *)
 
 (* Generates the Lie algebra of Sp(2n,R) *)
-GOSpBasis[n_]:=Module[{SYM,ASYM,notK,Tr,Trtran},
+GOLieBasisSp[n_]:=Module[{SYM,ASYM,notK,Tr,Trtran},
 	SYM=Flatten[Table[SparseArray[{{i,j}->If[i!=j,N[1/Sqrt[2]],1],{j,i}->If[i!=j,N[1/Sqrt[2]],1]},{n,n}],{i,1,n},{j,i,n}],1];
 	ASYM=Flatten[Table[SparseArray[{{i,j}->N[1/Sqrt[2]],{j,i}->-N[1/Sqrt[2]]},{n,n}],{i,1,n},{j,i+1,n}],1];
 	notK=Join[
@@ -215,20 +299,20 @@ GOSpBasis[n_]:=Module[{SYM,ASYM,notK,Tr,Trtran},
 Return[Table[Tr.Ki.Transpose[Tr],{Ki,notK}]]]
 
 (* Generates the subspace of the Lie algebra of Sp(2n,R) where we remove the u(n) sub algebra*)
-GOSpBasisNoUN[n_]:=Module[{Kold},
-	Kold=GOSpBasis[n];
-Return[Table[If[SymmetricMatrixQ[old],old],{old,Kold}]//DeleteCases[#,Null]&]]
+GOLieBasisSpNoUN[n_]:=Module[{Kold},
+	Kold=GOLieBasisSp[n];
+Return[Table[If[SymmetricMatrixQ[old],old],{old,Kold}]//DeleteCases[#,Null]&]];
 
 (* Generates the subspace of the Lie algebra of Sp(2n,R) where we remove u(1)^n *)
-GOSpBasisNoU1[n_]:=Module[{N,Kold,notK1,notK2,Knew},
-	Kold=GOSpBasis[n];
+GOLieBasisSpNoU1[n_]:=Module[{N,Kold,notK1,notK2,Knew},
+	Kold=GOLieBasisSp[n];
 	notK1=Table[If[SymmetricMatrixQ[old]==False,old],{old,Kold}]//DeleteCases[#,Null]&;
 	notK2=Table[If[Length[notK["NonzeroValues"]]==2,notK],{notK,notK1}]//DeleteCases[#,Null]&;
 Return[DeleteCases[Kold,Alternatives@@notK2]]];
 
 (* Generates the subspace of the Lie algebra of Sp(2dim1+2dim2,R) where we remove the subalgebras Sp(2dim1,R) and Sp(2dim2,R) *)
-GOSpBasisNoSp[dim1_,dim2_]:=Module[{FullBasis,Indices1,Indices2,Indices,MQ2,MQ3,CheckM,CheckList},
-	FullBasis=GOSpBasis[dim1+dim2];
+GOLieBasisSpMixing[dim1_,dim2_]:=Module[{FullBasis,Indices1,Indices2,Indices,MQ2,MQ3,CheckM,CheckList},
+	FullBasis=GOLieBasisSp[dim1+dim2];
 	Indices1=Range[2dim1];Indices2=Range[2dim1+1,2(dim1+dim2)];
 
 	MQ2[M_]:=M[[Indices1,Indices2]];MQ3[M_]:=M[[Indices2,Indices1]];
@@ -238,17 +322,17 @@ GOSpBasisNoSp[dim1_,dim2_]:=Module[{FullBasis,Indices1,Indices2,Indices,MQ2,MQ3,
 	CheckList=CheckM/@FullBasis; Indices=Position[CheckList,False]//Flatten;
 	FullBasis[[Indices]]];
 
-(* Generates the Lie algebra of O(2n) *)
-GOOBasis[n_]:=Module[{notK,Tr,Trtran},
+(* Generates the Lie algebra of SO(2n) *)
+GOLieBasisSO[n_]:=Module[{notK,Tr,Trtran},
 	notK=Flatten[Table[SparseArray[{{i,j}->1,{j,i}->-1},{2n,2n}],{i,1,2n},{j,i+1,2n}],1];
 	Tr=GOqpqpFROMqqpp[n];
 Return[Table[Tr.Ki.Transpose[Tr],{Ki,notK}]]];
 
 (* Generates the empty Lie algebra of n degrees of freedom, i.e, a list containing a single zero 2n by 2n matrix *)
-GOEmptyLieAlgebra[n_]:={ConstantArray[0,{2n,2n}]};
+GOLieBasisEmpty[n_]:={ConstantArray[0,{2n,2n}]};
 
 (* Generating compound basis *)
-GOCompoundBasis[VecOfLieAlgebra_]:=Module[{NumberOfLieAlgebras,VecOfDim,VecOfEnlarged,TotalDim,Ktotal,FirstDim},
+GOLieBasisCompound[VecOfLieAlgebra_]:=Module[{NumberOfLieAlgebras,VecOfDim,VecOfEnlarged,TotalDim,Ktotal,FirstDim},
 	NumberOfLieAlgebras=Length[VecOfLieAlgebra];
 	VecOfDim=Length[#[[1]]]&/@VecOfLieAlgebra;
 	TotalDim=Total[VecOfDim];
