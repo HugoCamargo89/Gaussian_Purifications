@@ -424,13 +424,12 @@ GOOptimize[
 		(* Define function values and gradient for initial values *) 
 		Mold=M0; Eold=function[#,J0]&/@Mold; {grad,Normgrad,X}=(gradfunction[#,J0,K,geometry]&/@Mold)//Transpose;
 		
-		Print[Eold]; (*Lucas: Why print it here?*)
+		(* Print[Eold]; Lucas: Why print it here?*)
 		
 		Elist={Eold}//Transpose; Normlist={Normgrad}//Transpose; diffE=Eold; diffNorm=Normgrad; 
 		
 		(* Initialise step count *)
-		stepcount=0;
-	
+		stepcount=0;	
 		
 		(* -----Main routine----- *)
 		
@@ -472,7 +471,7 @@ GOOptimize[
 	If[stepcount >= steplimit,AppendTo[donelist,Position[Eold,Min[Eold]]];stopreason="Iteration limit reached"];
 	If[#<Etol,AppendTo[donelist,Position[diffE,#]];stopreason="Function value tolerance reached"]&/@diffE;
 	
-	doneE=Eold[[donelist//Flatten]]; doneElist=Elist[[donelist//Flatten]]; doneM=M0list[[donelist//Flatten]]; doneNorm=Normlist[[donelist//Flatten]];
+	doneE=Eold[[donelist//Flatten]]; doneElist=Elist[[donelist//Flatten]]; doneM=Mold[[donelist//Flatten]]; doneNorm=Normlist[[donelist//Flatten]];
 	resultIndex=Position[doneE,Min[doneE]]//Flatten;
 	
 	FinalE=doneE[[resultIndex]]; FinalM=doneM[[resultIndex]]; FinalElist=doneElist[[resultIndex]]; FinalNormlist=doneNorm[[resultIndex]];
@@ -486,7 +485,7 @@ GOOptimize[
 (* --------------------------------------------------------------------Purifications and the standard form-------------------------------------------------------------------- *)
 
 (* Extracting the parameters for the standard form *)
-GOExtractStdFormG[G_]:=Module[{NT=Dimensions[G][[1]]/2,\[CapitalOmega]T,J,RI,SWT,tra,resc,Tra,GAB,ON,TRA,check,checklist,DiagElems,Diag,Mtra,rlist}, 
+(*GOExtractStdFormG[G_]:=Module[{NT=Dimensions[G][[1]]/2,\[CapitalOmega]T,J,RI,SWT,tra,resc,Tra,GAB,ON,TRA,check,checklist,DiagElems,Diag,Mtra,rlist}, 
 	\[CapitalOmega]T=GO\[CapitalOmega]qpqp[NT]; J=-G.\[CapitalOmega]T;
 
 	RI=SparseArray[{{x_,x_}->-I Abs[Re[I^x]]+ Abs[Re[I^(x+1)]],{x_,y_}/;y-x==1->Abs[Re[I^y]],{x_,y_}/;x-y==1->I Abs[Re[I^x]]},{2NT,2NT}];
@@ -505,17 +504,35 @@ GOExtractStdFormG[G_]:=Module[{NT=Dimensions[G][[1]]/2,\[CapitalOmega]T,J,RI,SWT
 	Mtra=Diag.TRA;
 
 	rlist=Diagonal[1/2 ArcCosh[((TRA.G.Transpose[TRA])//Chop)]][[1;;-1;;2]];
-	Return[{rlist,Mtra}]];
-
-GOExtractStdForm\[CapitalOmega][\[CapitalOmega]_]:=Module[{tuples,selecttuples,values,vectors,g,invg,Mtra,rlist},
-	tuples=Eigensystem[\[CapitalOmega]]//Transpose;
+	Return[{rlist,Mtra}]];*)
+GOExtractStdFormG[G_]:=Module[{NT=Dimensions[G][[1]]/2,sqG,\[CapitalOmega]T,mat,q,t,JJ,Mtra,sign,MTra,rlist}, 
+	sqG=MatrixPower[G,-1/2];
+	\[CapitalOmega]T=GO\[CapitalOmega]qpqp[NT];
+	mat=sqG.\[CapitalOmega]T.sqG;
+	JJ=\[CapitalOmega]T.G;
+	{q,t}=SchurDecomposition[mat]//Chop;
+	Mtra=Transpose[sqG.q.MatrixPower[t,-1/2]];
+	rlist=1/2 ArcCosh[Select[Im[Eigenvalues[JJ]]//Chop,#>0&]];
+	sign=Mtra.GOinvMSp[Mtra]//Chop;
+	MTra=DiagonalMatrix[Table[If[sign[[i,i]]<0&&OddQ[i],-1,1],{i,2NT}]].Mtra;
+	Return[{rlist,MTra}]];
+	
+(*GOExtractStdForm\[CapitalOmega][\[CapitalOmega]_]:=Module[{tuples,selecttuples,values,vectors,g,invg,Mtra,rlist},
+	tuples=Eigensystem[\[CapitalOmega]]//Chop//Transpose;
 	selecttuples=Select[tuples,Im[#][[1]]>=0&]//Chop;
 	{values,vectors}=selecttuples//Transpose;
 	g=vectors.ConjugateTranspose[vectors]//Chop;
 	invg=MatrixPower[Inverse[g],1/2];
 	Mtra=Table[{Sqrt[2]*Re[x],Sqrt[2]*Im[x]},{x,invg.vectors}]//Flatten[#,1]&;
 	rlist=1/2ArcCos[Im[#]]&/@values//N;
-	Return[{rlist,Mtra}]];
+	Return[{rlist,Mtra}]];*)
+GOExtractStdForm\[CapitalOmega][\[CapitalOmega]_]:=Module[{evalues,evectors,RealImaginaryVectors,SelectedVectors,rList,Mtra},
+	{evalues,evectors}=Eigensystem[\[CapitalOmega]]//Chop;
+	RealImaginaryVectors=Flatten[Table[{Re[vec],Im[vec]},{vec,evectors}],1];
+	SelectedVectors=DeleteDuplicates[RealImaginaryVectors,(#1==-#2)||(#1==#2)||Norm[#2]==0&];
+	Mtra=Orthogonalize[Table[vec/Norm[vec],{vec,SelectedVectors}]];
+	rList=Table[1/2ArcCos[Abs[evalues[[i]]]],{i,1,Length[evalues],2}];
+	Return[{rList,Mtra}]]
 
 GOPurifyStandardGBoson[rlist_,dimp_,Gform_]:=Module[{cosh,sinh,diag,Q14,Q23,Q5,G0,\[CapitalOmega]0,J0,n,m,Mtra},
 	cosh=Flatten[Table[{Cosh[2 rr],Cosh[2 rr]},{rr,rlist}]];
@@ -576,7 +593,7 @@ GOEoPBos[ResAA_]:=Function[{M,J0}, Module[{n,D,logDD},
 	Re[1/2 Tr[D.logDD]]//Chop]];
 GOEoPFerm[ResAA_]:=Function[{M,J0}, Module[{n,D,logD},
 	n=Length[J0];
-	D=(M.(IdentityMatrix[n]+I J0).Inverse[M]/2)[[ResAA,ResAA]];
+	D=(M.(IdentityMatrix[n]+I J0).Transpose[M]/2)[[ResAA,ResAA]];
 	logD=GOConditionalLog[D];
 	Re[-Tr[D.logD]]//Chop]];
 GOEoPgradBos[ResAA_]:=Function[{M,J0,K,geometry},Module[{n,nn,invM,dJ,D,dD,logDD,grad,Normgrad,X,invmetric},
@@ -604,7 +621,7 @@ GOEoPgradBos[ResAA_]:=Function[{M,J0,K,geometry},Module[{n,nn,invM,dJ,D,dD,logDD
 GOEoPgradFerm[ResAA_]:=Function[{M,J0,K,geometry},Module[{n,nn,invM,KI,dJ,D,dD,logD,grad,Normgrad,X,invmetric},
 	invmetric=geometry[[2]];
 	n=Length[J0]; nn=Length[J0];
-	invM=Inverse[M];
+	invM=Transpose[M];
 	KI=Table[PadLeft[Ki,{n,n}],{Ki,K}];
 	dJ=Table[M.(KIi.J0-J0.KIi).invM,{KIi,KI}];
 	dD=Table[I/2 dJAAi[[ResAA,ResAA]],{dJAAi,dJ}];
@@ -641,21 +658,6 @@ GOCoPgradFerm[JT_]:=Function[{M,Jref0,K,geometry},Module[{dimA,dimB,invM,invJT,D
 	grad=invmetric.Table[Re[-2Tr[GOConditionalLog[D].invD.dDi]],{dDi,dD}];
 	Normgrad=Norm[grad]; X=-grad.K/Normgrad;
 	{grad,Normgrad,X//SparseArray}]];
-
-(* --------------- Energy of quadratic Hamiltonians ---------------- *)
-(* NOT UP TO DATE - DOES NOT WORK BECAUSE CONVENTIONS CHANGED *)
-(*
-GOenergyBos[h_]:=Function[{M,J0},Module[{\[CapitalOmega]0,G},
-	\[CapitalOmega]0=GO\[CapitalOmega]qpqp[Length[M]/2];
-	G=M.J0.\[CapitalOmega]0.Transpose[M]; 1/4 Tr[h.G]]];
-GOenergygradBos[h_]:=Function[{M,J0,K},Module[{\[CapitalOmega]0},
-	\[CapitalOmega]0=GO\[CapitalOmega]qpqp[Length[M]/2];
-	Table[1/4 Tr[h.M.(KK.J0.\[CapitalOmega]0+J0.\[CapitalOmega]0.Transpose[KK]).Transpose[M]],{KK,K}]]];
-GOenergyFerm[h_]:=Function[{M,J0},Module[{J},
-	J=M.J0.Inverse[M]; 1/4 Tr[h.J]]];
-GOenergygradFerm[h_]:=Function[{M,J0,K},
-	Table[1/4 Tr[h.M.(KK.J0-J0.KK).Inverse[M]],{KK,K}]];
-*)
 
 
 End[]
