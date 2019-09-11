@@ -38,7 +38,8 @@ SystemSpecific={\!\(\*
 StyleBox[\"J0\",\nFontWeight->\"Bold\"]\),\!\(\*
 StyleBox[\"listM0\",\nFontWeight->\"Bold\"]\),\!\(\*
 StyleBox[\"KK\",\nFontWeight->\"Bold\"]\),\!\(\*
-StyleBox[\"geometry\",\nFontWeight->\"Bold\"]\)}
+StyleBox[\"geometry\",\nFontWeight->\"Bold\"]\),\!\(\*
+StyleBox[\"newM\",\nFontWeight->\"Bold\"]\)}
 	\!\(\*
 StyleBox[\"J0\",\nFontWeight->\"Bold\"]\) represents a reference point
 	\!\(\*
@@ -47,6 +48,8 @@ StyleBox[\"listM0\",\nFontWeight->\"Bold\"]\) represents a list of starting poin
 StyleBox[\"KK\",\nFontWeight->\"Bold\"]\) represents a local basis of tangent space (e.g. subspace of Lie algebra)
 	\!\(\*
 StyleBox[\"geometry\",\nFontWeight->\"Bold\"]\) represents a local notion of geometry (e.g. metric) with respect to KK
+	\!\(\*
+StyleBox[\"newM\",\nFontWeight->\"Bold\"]\) represents the function that takes the gradient as input and constructs a new point on the state manifold
 ProcedureSpecific={\!\(\*
 StyleBox[\"tolF\",\nFontWeight->\"Bold\"]\),\!\(\*
 StyleBox[\"tolgrad\",\nFontWeight->\"Bold\"]\),\!\(\*
@@ -161,6 +164,7 @@ GOLieBasisCompound::usage="GOCompoundBasis[{LieAlgebra1,LieAlgebra2,...,LieAlgeb
 
 GOMetricSp::usage="GOMetricSp[K,\!\(\*SubscriptBox[\(J\), \(0\)]\)] generates the natural metric for the symplectic manifold with Lie basis K, for an initial state \!\(\*SubscriptBox[\(J\), \(0\)]\)";
 GOMetricO::usage="GOMetricO[K,\!\(\*SubscriptBox[\(J\), \(0\)]\)] generates the natural metric for the orthogonal manifold with Lie basis K";
+GOGeometryConst::usage="GeometryConst[LieBasis,J0,pm] creates the list geometry={metric,invmetric} of a constant geometry around J0. It works for both, bosonic and fermionic systems by choosing pm=+1 for bosons and pm=-1 for fermions.";
 
 
 (* Purifications and the standard form *)
@@ -379,6 +383,15 @@ GOMetricSp[LieBasis_,J0_]:=Module[{G0,invG0},
 
 GOMetricO[LieBasis_]:=IdentityMatrix[Length[LieBasis]]//SparseArray;
 
+(* Natural geometry *)
+(* This computes the natural Fubini-Study metric associated to Lie alebra elements LieBasis around the state J0. *)
+(* The code works for bosons and fermions at the same time by choosing pm=+1 for bosons and pm=-1 for fermions! *)
+GOGeometryConst[LieBasis_,J0_,pm_]:=Module[{invG0,metric,invmetric},
+	metric=pm Table[Tr[(K1.J0-J0.K1).(K2.J0-J0.K2)],{K1,LieBasis},{K2,LieBasis}]//SparseArray;
+	invmetric=PseudoInverse[metric]//SparseArray;
+	Return[{metric,invmetric}]
+	];
+
 
 (* --------------------------------------------------------------------Optimization algorithm-------------------------------------------------------------------------------- *)
 
@@ -388,7 +401,7 @@ GOOptimize[
 {function_, gradfunction_}, 
 
 (* System-specific input arguments *)
-{J0_, M0_, K_,metric_, newM_},
+{J0_, M0_, K_,geometry_, newM_},
 
 (* Process-specific input arguments *)
 {gradtol_, Etol_, steplimit_:\[Infinity], stepcorrection_, trackall_:False}]:=
@@ -405,14 +418,11 @@ GOOptimize[
 		(* Sub-rountine for step size - this definition is always the same but depends on the stepcorrection function *)
 		GenerateM[\[Epsilon]_,Mold_,Mnew_,Eold_,Enew_,X_]:=Module[{s=\[Epsilon], enew=Enew, corr=0, mnew=Mnew},
 			While[enew>Eold, s=stepcorrection[s]; corr++; mnew=newM[Mold,s,X]; enew=function[mnew,J0];]; AppendTo[CorrList,corr]; Return[{mnew//SparseArray,enew}]];
-			
-		(* Define inverse of natural metric *)
-		invmetric=PseudoInverse[metric];
 		
 		(* --------Iteration-------- *)
 		
 		(* Define function values and gradient for initial values *) 
-		Mold=M0; Eold=function[#,J0]&/@Mold; {grad,Normgrad,X}=(gradfunction[#,J0,K,invmetric]&/@Mold)//Transpose;
+		Mold=M0; Eold=function[#,J0]&/@Mold; {grad,Normgrad,X}=(gradfunction[#,J0,K,geometry]&/@Mold)//Transpose;
 		
 		Print[Eold]; (*Lucas: Why print it here?*)
 		
@@ -437,7 +447,7 @@ GOOptimize[
 			{Mnew,Enew}=MapThread[GenerateM,{\[Epsilon],Mold,Mnew,Eold,Enew,X}]//Transpose;
 		
 		(* Define function values and gradient for new values *) 
-		Mold=Mnew; Eold=Enew; {grad,Normgrad,X}=(gradfunction[#,J0,K,invmetric]&/@Mold)//Transpose; 
+		Mold=Mnew; Eold=Enew; {grad,Normgrad,X}=(gradfunction[#,J0,K,geometry]&/@Mold)//Transpose; 
 		Elist=Elist//Transpose; Elist=AppendTo[Elist,Eold]//Transpose; Normlist=Normlist//Transpose; Normlist=AppendTo[Normlist,Normgrad]//Transpose;
 		diffE=(Abs[#[[-1]]-#[[-2]]]/#[[-1]])&/@Elist; diffNorm=Abs[#[[-1]]-#[[-2]]]&/@Normlist;
 
@@ -569,7 +579,8 @@ GOEoPFerm[ResAA_]:=Function[{M,J0}, Module[{n,D,logD},
 	D=(M.(IdentityMatrix[n]+I J0).Inverse[M]/2)[[ResAA,ResAA]];
 	logD=GOConditionalLog[D];
 	Re[-Tr[D.logD]]//Chop]];
-GOEoPgradBos[ResAA_]:=Function[{M,J0,K,invmetric},Module[{n,nn,invM,dJ,D,dD,logDD,grad,Normgrad,X},
+GOEoPgradBos[ResAA_]:=Function[{M,J0,K,geometry},Module[{n,nn,invM,dJ,D,dD,logDD,grad,Normgrad,X,invmetric},
+	invmetric=geometry[[2]];
 	n=Length[J0];
 	invM=GOinvMSp[M];
 	dJ=Table[M.(KIi.J0-J0.KIi).invM,{KIi,K}];
@@ -579,7 +590,7 @@ GOEoPgradBos[ResAA_]:=Function[{M,J0,K,invmetric},Module[{n,nn,invM,dJ,D,dD,logD
 	grad=invmetric.Table[Re[1/2 Tr[dDi.logDD]]//Chop,{dDi,dD}];
 	Normgrad=Norm[grad]; X=-grad.K/Normgrad;
 	{grad,Normgrad,X//SparseArray}]];
-(*GOEoPgradBos[ResAA_]:=Function[{M,J0,K,invmetric},Module[{n,nn,invM,dJ,D,dD,logDD,grad,Normgrad,X,metric,metricinv},
+(*GOEoPgradBos[ResAA_]:=Function[{M,J0,K,geometry},Module[{n,nn,invM,dJ,D,dD,logDD,grad,Normgrad,X,metric,metricinv},
 	n=Length[J0];
 	invM=GOinvMSp[M];
 	dJ=Table[KIi.M.J0.invM-M.J0.invM.KIi,{KIi,K}];
@@ -590,7 +601,8 @@ GOEoPgradBos[ResAA_]:=Function[{M,J0,K,invmetric},Module[{n,nn,invM,dJ,D,dD,logD
 	grad=metricinv.Table[Re[1/2 Tr[dDi.logDD]]//Chop,{dDi,dD}];
 	Normgrad=Norm[grad]; X=-grad.K/Normgrad;
 	{grad,Normgrad,X//SparseArray}]];*)
-GOEoPgradFerm[ResAA_]:=Function[{M,J0,K,invmetric},Module[{n,nn,invM,KI,dJ,D,dD,logD,grad,Normgrad,X},
+GOEoPgradFerm[ResAA_]:=Function[{M,J0,K,geometry},Module[{n,nn,invM,KI,dJ,D,dD,logD,grad,Normgrad,X,invmetric},
+	invmetric=geometry[[2]];
 	n=Length[J0]; nn=Length[J0];
 	invM=Inverse[M];
 	KI=Table[PadLeft[Ki,{n,n}],{Ki,K}];
@@ -611,7 +623,8 @@ GOCoPFerm[JT_]:=Function[{M,Jref0},Module[{invM,D},
 	D=M.Jref0.Transpose[M].Inverse[JT]; 
 	Re[Sqrt[Total[I Log[#1]^2&/@Eigenvalues[D]]/8]]]];	
 	
-GOCoPgradBos[JT_]:=Function[{M,Jref0,K,invmetric},Module[{dimA,dimB,invM,invJT,D,invD,dD,grad,Normgrad,X},
+GOCoPgradBos[JT_]:=Function[{M,Jref0,K,geometry},Module[{dimA,dimB,invM,invJT,D,invD,dD,grad,Normgrad,X,invmetric},
+	invmetric=geometry[[2]];
 	dimB=Length[K[[1]]]; dimA=Length[M]-dimB;
 	invM=GOinvMSp[M]; invJT=Inverse[JT];
 	D=M.Jref0.invM.invJT; invD=Inverse[D];
@@ -619,7 +632,8 @@ GOCoPgradBos[JT_]:=Function[{M,Jref0,K,invmetric},Module[{dimA,dimB,invM,invJT,D
 	grad=invmetric.Table[Re[2Tr[GOConditionalLog[D].invD.dDi]],{dDi,dD}];
 	Normgrad=Norm[grad]; X=-grad.K/Normgrad;
 	{grad,Normgrad,X//SparseArray}]];
-GOCoPgradFerm[JT_]:=Function[{M,Jref0,K,invmetric},Module[{dimA,dimB,invM,invJT,D,invD,dD,grad,Normgrad,X},
+GOCoPgradFerm[JT_]:=Function[{M,Jref0,K,geometry},Module[{dimA,dimB,invM,invJT,D,invD,dD,grad,Normgrad,X,invmetric},
+	invmetric=geometry[[2]];
 	dimB=Length[K[[1]]]; dimA=Length[M]-dimB;
 	invM=Transpose[M]; invJT=Inverse[JT];
 	D=M.Jref0.invM.invJT; invD=Inverse[D];
@@ -629,6 +643,8 @@ GOCoPgradFerm[JT_]:=Function[{M,Jref0,K,invmetric},Module[{dimA,dimB,invM,invJT,
 	{grad,Normgrad,X//SparseArray}]];
 
 (* --------------- Energy of quadratic Hamiltonians ---------------- *)
+(* NOT UP TO DATE - DOES NOT WORK BECAUSE CONVENTIONS CHANGED *)
+(*
 GOenergyBos[h_]:=Function[{M,J0},Module[{\[CapitalOmega]0,G},
 	\[CapitalOmega]0=GO\[CapitalOmega]qpqp[Length[M]/2];
 	G=M.J0.\[CapitalOmega]0.Transpose[M]; 1/4 Tr[h.G]]];
@@ -639,6 +655,7 @@ GOenergyFerm[h_]:=Function[{M,J0},Module[{J},
 	J=M.J0.Inverse[M]; 1/4 Tr[h.J]]];
 GOenergygradFerm[h_]:=Function[{M,J0,K},
 	Table[1/4 Tr[h.M.(KK.J0-J0.KK).Inverse[M]],{KK,K}]];
+*)
 
 
 End[]
