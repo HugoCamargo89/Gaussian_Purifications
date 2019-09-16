@@ -454,7 +454,7 @@ GOOptimize[
 		stepcount++;
 											
 		(* Checking trajectories *)
-		If[stepcount/5//IntegerQ && Length[M0list]>1 && trackall==False,
+		If[stepcount/5//IntegerQ && Length[M0list]>1 && !trackall,
 			
 			(* Retain most promising 20% *)
 			keepnumber=If[(.2 dimM0//Round)==0,1,.2 dimM0//Round]; 
