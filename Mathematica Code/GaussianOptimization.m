@@ -474,7 +474,7 @@ GOOptimize[
 	doneE=Eold[[donelist//Flatten]]; doneElist=Elist[[donelist//Flatten]]; doneM=Mold[[donelist//Flatten]]; doneNorm=Normlist[[donelist//Flatten]];
 	resultIndex=Position[doneE,Min[doneE]]//Flatten;
 	
-	FinalE=doneE[[resultIndex]]; FinalM=doneM[[resultIndex]]; FinalElist=doneElist[[resultIndex]]; FinalNormlist=doneNorm[[resultIndex]];
+	FinalE=DeleteDuplicates[doneE[[resultIndex]]]; FinalM=doneM[[resultIndex]]; FinalElist=doneElist[[resultIndex]]; FinalNormlist=doneNorm[[resultIndex]];
 	Print["Reason for termination: "<>stopreason];
 	(* --- Output --- *)
 
