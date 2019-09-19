@@ -512,7 +512,7 @@ GOExtractStdFormG[G_]:=Module[{NT=Dimensions[G][[1]]/2,sqG,\[CapitalOmega]T,mat,
 	JJ=\[CapitalOmega]T.G;
 	{q,t}=SchurDecomposition[mat]//Chop;
 	Mtra=Transpose[sqG.q.MatrixPower[t,-1/2]];
-	rlist=1/2 ArcCosh[Select[Im[Eigenvalues[JJ]]//Chop,#>0&]];
+	rlist=Table[1/2 ArcCosh[(Mtra.G.Transpose[Mtra])[[2i,2i]]],{i,NT}];
 	sign=Mtra.GOinvMSp[Mtra]//Chop;
 	MTra=DiagonalMatrix[Table[If[sign[[i,i]]<0&&OddQ[i],-1,1],{i,2NT}]].Mtra;
 	Return[{rlist,MTra}]];
