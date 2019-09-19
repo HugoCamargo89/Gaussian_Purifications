@@ -156,6 +156,7 @@ GOLieBasisSpNoUN::usage="GOLieBasisSpNoUN[N] generates Sp(2N,R)/U(N) Lie algebra
 GOLieBasisSpNoU1::usage="GOLieBasisSpNoU1[N] generates Sp(2N,R)/U(1\!\(\*SuperscriptBox[\()\), \(N\)]\) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
 GOLieBasisSpMixing::usage="GOLieBasisSpMixing[\!\(\*SubscriptBox[\(N\), \(A\)]\),\!\(\*SubscriptBox[\(N\), \(B\)]\)] generates the compound Lie algebra basis sp(2(\!\(\*SubscriptBox[\(N\), \(A\)]\)+\!\(\*SubscriptBox[\(N\), \(B\)]\)),R)/sp(2\!\(\*SubscriptBox[\(N\), \(A\)]\),R) x sp(2\!\(\*SubscriptBox[\(N\), \(B\)]\),R)";
 GOLieBasisSO::usage="GOLieBasisSO[N] generates O(2N,R) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
+GOLieBasisSONoUN::usage="GOLieBasisSpNoUN[N] generates SO(2N,R)/U(N) Lie algebra basis in basis (\!\(\*SubscriptBox[\(q\), \(1\)]\),\!\(\*SubscriptBox[\(p\), \(1\)]\),\!\(\*SubscriptBox[\(q\), \(2\)]\),\!\(\*SubscriptBox[\(p\), \(2\)]\),...)";
 GOLieBasisEmpty::usage="GOLieBasisEmpty[N] constructs the empty Lie basis given by a list containing a single 2N by 2N matrix with zero entries. It can be used to construct a compound basis using GOLieBasisCompound.";
 
 
@@ -332,6 +333,12 @@ GOLieBasisSO[n_]:=Module[{notK,Tr,Trtran},
 	Tr=GOqpqpFROMqqpp[n];
 Return[Table[Tr.Ki.Transpose[Tr],{Ki,notK}]]];
 
+(* Generates the subspace of the Lie algebra of SO(2n) where we remove the u(n) sub algebra*)
+GOLieBasisSONoUN[N_]:=Module[{FullBasis,\[CapitalOmega]},
+	FullBasis=GOLieBasisSO[N];
+	\[CapitalOmega]=GO\[CapitalOmega]qpqp[N];
+Return[Complement[FullBasis,Select[FullBasis,SymmetricMatrixQ[#.\[CapitalOmega]]&]]]];
+
 (* Generates the empty Lie algebra of n degrees of freedom, i.e, a list containing a single zero 2n by 2n matrix *)
 GOLieBasisEmpty[n_]:={ConstantArray[0,{2n,2n}]};
 
@@ -448,7 +455,7 @@ GOOptimize[
 		(* Define function values and gradient for new values *) 
 		Mold=Mnew; Eold=Enew; {grad,Normgrad,X}=(gradfunction[#,J0,K,geometry]&/@Mold)//Transpose; 
 		Elist=Elist//Transpose; Elist=AppendTo[Elist,Eold]//Transpose; Normlist=Normlist//Transpose; Normlist=AppendTo[Normlist,Normgrad]//Transpose;
-		diffE=(Abs[#[[-1]]-#[[-2]]]/#[[-1]])&/@Elist; diffNorm=Abs[#[[-1]]-#[[-2]]]&/@Normlist;
+		diffE=Abs[#[[-1]]-#[[-2]]]&/@Elist; diffNorm=Abs[#[[-1]]-#[[-2]]]&/@Normlist;
 
 		(* Update step count *)
 		stepcount++;
