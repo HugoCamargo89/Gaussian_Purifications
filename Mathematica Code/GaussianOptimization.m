@@ -482,10 +482,9 @@ GOOptimize[
 	resultIndex=Position[doneE,Min[doneE]]//Flatten;
 	
 	FinalE=DeleteDuplicatesBy[doneE[[resultIndex]],10^-10]; FinalM=doneM[[resultIndex]]; FinalElist=doneElist[[resultIndex]]; FinalNormlist=doneNorm[[resultIndex]];
-	Print["Reason for termination: "<>stopreason];
 	(* --- Output --- *)
 
-	Return[{FinalE,FinalM,CorrList,FinalElist,Elist,FinalNormlist}]
+	Return[{FinalE,FinalM,CorrList,FinalElist,Elist,FinalNormlist,stopreason}]
 ];
 
 
