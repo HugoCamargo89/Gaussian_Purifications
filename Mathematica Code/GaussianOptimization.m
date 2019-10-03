@@ -390,14 +390,28 @@ GOMetricSp[LieBasis_,J0_]:=Module[{G0,invG0},
 
 GOMetricO[LieBasis_]:=IdentityMatrix[Length[LieBasis]]//SparseArray;
 
+(* Natural geometry for ONB bases *)
+(* This computes the natural Fubini-Study metric associated to Lie alebra elements LieBasis around the state J0. *)
+(* The code works for bosons and fermions at the same time by choosing pm=+1 for bosons and pm=-1 for fermions! *)
+(* ATTENTION: This code only works for J0 in standard form!!! Ortherwise, you need to use the code below GOGeometryConstOLD which is commented out*)
+(* Our Lie algebra bases are constructed as ONB bases with respect to J0 in standard form. This means we can simplify the calculation temendeously in comparison to GOGeometryConstOLD.*)
+(* Hoewver, we still keep the calculation. *)
+GOGeometryConst[LieBasis_,J0_,pm_]:=Module[{invG0,metric,invmetric,norm2},
+	norm2=pm Table[Tr[MatrixPower[(K.J0-J0.K),2]],{K,LieBasis}];
+	metric=DiagonalMatrix[norm2]//SparseArray;
+	invmetric=DiagonalMatrix[1/norm2]//SparseArray;
+	Return[{metric,invmetric}]
+	];
+
 (* Natural geometry *)
 (* This computes the natural Fubini-Study metric associated to Lie alebra elements LieBasis around the state J0. *)
 (* The code works for bosons and fermions at the same time by choosing pm=+1 for bosons and pm=-1 for fermions! *)
-GOGeometryConst[LieBasis_,J0_,pm_]:=Module[{invG0,metric,invmetric},
+(* GOGeometryConstOLD[LieBasis_,J0_,pm_]:=Module[{invG0,metric,invmetric},
 	metric=pm Table[Tr[(K1.J0-J0.K1).(K2.J0-J0.K2)],{K1,LieBasis},{K2,LieBasis}]//SparseArray;
 	invmetric=PseudoInverse[metric]//SparseArray;
 	Return[{metric,invmetric}]
 	];
+*)
 
 
 (* --------------------------------------------------------------------Optimization algorithm-------------------------------------------------------------------------------- *)
