@@ -396,10 +396,11 @@ GOMetricO[LieBasis_]:=IdentityMatrix[Length[LieBasis]]//SparseArray;
 (* ATTENTION: This code only works for J0 in standard form!!! Ortherwise, you need to use the code below GOGeometryConstOLD which is commented out*)
 (* Our Lie algebra bases are constructed as ONB bases with respect to J0 in standard form. This means we can simplify the calculation temendeously in comparison to GOGeometryConstOLD.*)
 (* Hoewver, we still keep the calculation. *)
-GOGeometryConst[LieBasis_,J0_,pm_]:=Module[{invG0,metric,invmetric,norm2},
-	norm2=pm Table[Tr[MatrixPower[(K.J0-J0.K),2]],{K,LieBasis}];
+GOGeometryConst[LieBasis_,J0_,pm_]:=Module[{invG0,metric,invmetric,norm2,invnorm2},
+	norm2=pm Table[Tr[MatrixPower[(K.J0-J0.K),2]],{K,LieBasis}]//Chop;
+	invnorm2=Table[If[x==0,0,1/x],{x,norm2}];
 	metric=DiagonalMatrix[norm2]//SparseArray;
-	invmetric=DiagonalMatrix[1/norm2]//SparseArray;
+	invmetric=DiagonalMatrix[invnorm2]//SparseArray;
 	Return[{metric,invmetric}]
 	];
 
