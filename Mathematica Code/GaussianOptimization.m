@@ -567,7 +567,7 @@ GOPurifyStandardGBoson[rlist_,dimp_,Gform_]:=Module[{cosh,sinh,diag,Q14,Q23,Q5,G
 
 	If[m==n, G0=ArrayFlatten[{{Q14,Q23},{Q23,Q14}}]//SparseArray, G0=ArrayFlatten[{{Q14,Q23,0},{Q23,Q14,0},{0,0,Q5}}]//SparseArray];
 	
-	Mtra=If[Gform=="qpqp",IdentityMatrix[4n],ToExpression["GO"<>Gform<>"FROMqpqp"][n]];
+	Mtra=If[Gform=="qpqp",IdentityMatrix[2(n+m)],ToExpression["GO"<>Gform<>"FROMqpqp"][n+m]];
 	SparseArray[Mtra.G0.Transpose[Mtra]]];
 	
 GOPurifyStandardJBoson[rlist_,dimp_,Gform_]:=Module[{n,G,\[CapitalOmega]},
